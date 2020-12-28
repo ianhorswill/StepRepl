@@ -1,0 +1,12 @@
+[randomly] [generator]
+BelovedOf ?who [mother ?who].
+Say [mother ?who]: ?who 's mother.
+
+BelovedOf ?who [littleSister ?who].
+Say [littleSister ?who]: ?who 's little sister.
+
+BelovedOf ?who [littleBrother ?who].
+Say [littleBrother ?who]: ?who 's little brother.
+
+BelovedOf ?who [cat ?who].
+Say [cat ?who]: ?who 's cat.

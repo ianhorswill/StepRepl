@@ -1,0 +1,16 @@
+[randomly] [generator]
+Character manicPixieDreamPeep.
+Say manicPixieDreamPeep: the manic pixie dream peep
+
+[randomly] [generator]
+Interest manicPixieDreamPeep abbaCoverBands.
+Interest manicPixieDreamPeep ferrets.
+[randomly] [generator]
+Trait manicPixieDreamPeep eccentric.
+Trait manicPixieDreamPeep quirky.
+
+WorkInteraction manicPixieDreamPeep ?customer:
+    [Setting kookyStore]
+    The manic pixie dream peep shows a very odd item to a customer.
+    [Beat]
+[end]

@@ -1,0 +1,8 @@
+Mention [Var ?x]: ?x/Write
+Mention ?x: [Say ?x]
+Mention [Character ?x]: the ?x/Write
+Mention [IndefiniteArticle ?x]: a ?x/Write
+Mention ?x: ?x/Write
+
+[fallible]
+Say ?x: [Fail]

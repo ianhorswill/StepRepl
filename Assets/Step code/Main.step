@@ -1,0 +1,37 @@
+Text: [Story]
+
+S: [NP] [VP]
+
+[randomly]
+VP: [IV]
+VP: [TV] [NP]
+VP: [DTV] [NP] [NP]
+
+[randomly]
+IV: ran
+
+[randomly]
+TV: ate
+
+[randomly]
+DTV: gave
+
+[randomly]
+NP: [Det] [N]
+NP: [Name]
+
+[randomly]
+Det: the
+Det: a
+
+[randomly]
+N: cat
+N: dog
+N: tree
+
+[randomly]
+Name: Joan
+Name: Sally
+Name: Billy
+Name: Chris
+

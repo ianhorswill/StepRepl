@@ -1,0 +1,1628 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Step</name>
+    </assembly>
+    <members>
+        <member name="T:Step.Cons">
+            <summary>
+            LISP-style cons cells for lists.
+            </summary>
+        </member>
+        <member name="F:Step.Cons.First">
+            <summary>
+            First element of the list
+            </summary>
+        </member>
+        <member name="F:Step.Cons.Rest">
+            <summary>
+            Rest of the list
+            </summary>
+        </member>
+        <member name="F:Step.Cons.Empty">
+            <summary>
+            Represents the empty list
+            </summary>
+        </member>
+        <member name="M:Step.Cons.#ctor(System.Object,Step.Cons)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.GetEnumerator">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.SequenceStep">
+            <summary>
+            Implements a sequence in which each successive call invokes the next branch
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SequenceStep.#ctor(Step.Interpreter.Step[],Step.Interpreter.Step)">
+            <summary>
+            Makes a step that first calls the first branch, then on successive calls, invokes successive branches.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SequenceStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Run the next branch, or fail if we've run out of branches
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.StateElement">
+            <summary>
+            A name for an element of the State, that is, something that can change during the execution of the program
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.StateElement.Name">
+            <summary>
+            Name of the dynamic state element.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.StateElement.HasDefault">
+            <summary>
+            True if this state element has a default value
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.StateElement.DefaultValue">
+            <summary>
+            Default value of state element if HasDefault is true
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.StateElement.#ctor(System.String,System.Boolean,System.Object)">
+            <summary>
+            Make a new StateElement with the specified name
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.StateElement.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.ArgumentCountException">
+            <summary>
+            Signals a task was called with the wrong number of arguments
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.ArgumentCountException.#ctor(System.Object,System.Int32,System.Object[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.ArgumentCountException.Check(System.Object,System.Int32,System.Object[])">
+            <summary>
+            Check if the number of arguments is as expected.  If not, throw an exception.
+            </summary>
+            <param name="task">Name of task called (used in error message, if necessary)</param>
+            <param name="expected">Number of arguments the task should take</param>
+            <param name="arglist">Actual arguments passed</param>
+            <exception cref="T:Step.Interpreter.ArgumentCountException">When the number of arguments is incorrect.</exception>
+        </member>
+        <member name="T:Step.Interpreter.ArgumentTypeException">
+            <summary>
+            Signals a task was called with the wrong kind of argument
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.ArgumentTypeException.#ctor(System.Object,System.Type,System.Object,System.Object[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.ArgumentTypeException.Check(System.Object,System.Type,System.Object,System.Object[])">
+            <summary>
+            Check the specified argument value is of the right type.  If not, throw exception
+            </summary>
+            <param name="task">Name of task - used in error message if necessary</param>
+            <param name="expected">Type expected</param>
+            <param name="actual">Value provided</param>
+            <param name="arglist">Full argument list of the task</param>
+            <exception cref="T:Step.Interpreter.ArgumentTypeException">When value isn't of the expected type</exception>
+        </member>
+        <member name="T:Step.Interpreter.ArgumentInstantiationException">
+            <summary>
+            Signals a task was called with an arg bound/unbound when it shouldn't have been
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.ArgumentInstantiationException.#ctor(System.Object,Step.Interpreter.BindingEnvironment,System.Object[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.BindingEnvironment">
+            <summary>
+            Represents all information about variable binding at a particular point in execution
+            Binding environments are readonly because we have to support backtracking: when we bind
+            a variable, we make a new binding environment, so that the old environment still exists
+            if we have to backtrack.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingEnvironment.Module">
+            <summary>
+            Module containing bindings of GlobalVariables
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.BindingEnvironment.Local">
+            <summary>
+            Logic variables holding the values of the current method's local variables
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingEnvironment.Unifications">
+            <summary>
+            Bindings mapping local variables to their values, or to other local variables
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingEnvironment.State">
+            <summary>
+            Bindings mapping global variables to their values, when overriding the Module's values
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.#ctor(Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
+            <summary>
+            Make a new binding environment based on the specified environment, with the specified change(s)
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.#ctor(Step.Module,Step.Interpreter.MethodCallFrame)">
+            <summary>
+            Make a new binding environment based on the specified environment, with the specified change(s)
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.#ctor(Step.Interpreter.BindingEnvironment,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable},Step.State)">
+            <summary>
+            Make a new binding environment based on the specified environment, with the specified change(s)
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.#ctor(Step.Interpreter.BindingEnvironment,Step.Interpreter.StateElement,System.Object)">
+            <summary>
+            Make a binding environment identical to e but with v bound to newValue
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.NewEmpty">
+            <summary>
+            Make a new binding environment with nothing in it.
+            Used for Unit tests.  Don't use this yourself.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Resolve(System.Object,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
+            <summary>
+            Canonicalize a term, i.e. get its value, or reduce it to a logic variable
+            if it doesn't have a value yet
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Resolve(System.Object)">
+            <summary>
+            Canonicalize a list of terms, i.e. get their values or reduce them to (unbound) logic variables.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.ResolveList(System.Object[],Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
+            <summary>
+            Canonicalize a list of terms, i.e. get their values or reduce them to (unbound) logic variables.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.ResolveList(System.Object[])">
+            <summary>
+            Canonicalize a list of terms, i.e. get their values or reduce them to (unbound) logic variables.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Unify(System.Object,System.Object,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable},Step.Interpreter.BindingList{Step.Interpreter.LogicVariable}@)">
+            <summary>
+            Attempt to unify two terms
+            </summary>
+            <param name="a">First term</param>
+            <param name="b">Other term</param>
+            <param name="inUnifications">Substitutions currently in place</param>
+            <param name="outUnifications">Substitutions in place after unification, if unification successful</param>
+            <returns>True if the objects are unifiable and outUnification holds their most general unifier</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Unify(System.Object,System.Object,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable}@)">
+            <summary>
+            Attempt to unify two terms
+            </summary>
+            <param name="a">First term</param>
+            <param name="b">Other term</param>
+            <param name="outUnifications">Substitutions in place after unification, if unification successful</param>
+            <returns>True if the objects are unifiable and outUnification holds their most general unifier</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.UnifyArrays(System.Object[],System.Object[],Step.Interpreter.BindingEnvironment@)">
+            <summary>
+            Attempt to unify two arrays of terms
+            </summary>
+            <param name="a">First array term</param>
+            <param name="b">Other array term</param>
+            <param name="e">Resulting BindingEnvironment.  This is the same as this BindingEnvironment, but possibly with a longer Unifications list.</param>
+            <returns>True if the objects are unifiable and e holds their most general unifier</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Deref(System.Object)">
+            <summary>
+            If value is a LogicVariable, follow the chain of substitutions in Unifications to reduce it to its normal form.
+            If it's not a logic variable, just returns the value.
+            </summary>
+            <param name="value">Term</param>
+            <returns>Reduced value of term.  Could be a LogicVariable, in which case it reduces to an unbound variable.</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.Deref(System.Object,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
+            <summary>
+            If value is a LogicVariable, follow the chain of substitutions in Unifications to reduce it to its normal form.
+            If it's not a logic variable, just returns the value.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.CopyTerm(System.Object)">
+            <summary>
+            Dereference all variables in term
+            This behaves identically to Deref except in the case where term is a tuple (i.e. object[]), in which case it
+            recursively recopies the array and dereferences its elements
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.BindingList`1">
+            <summary>
+            Represents values of variables of different types.
+            In the case of LocalVariables, which can be unified, this might be another variable,
+            in which case the bound variable has whatever value the other variable has.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="F:Step.Interpreter.BindingList`1.Variable">
+            <summary>
+            Variable given a value by this cell of the linked list
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingList`1.Value">
+            <summary>
+            Value given to the Variable
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingList`1.Next">
+            <summary>
+            Next cell in the binding list
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.#ctor(`0,System.Object,Step.Interpreter.BindingList{`0})">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.TryLookup(Step.Interpreter.BindingList{`0},`0,System.Object@)">
+            <summary>
+            Attempt to find the value of the variable in the bindinglist
+            </summary>
+            <param name="bindingList">BindingList to check</param>
+            <param name="variable">Variable to look for</param>
+            <param name="value">Value, if found, or null</param>
+            <returns>True if a value was found, otherwise false.</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.Lookup(Step.Interpreter.BindingList{`0},`0,System.Object)">
+            <summary>
+            Return value of the variable in the (possibly empty) binding list
+            </summary>
+            <param name="bindingList">List to check</param>
+            <param name="v">Variable to look up</param>
+            <param name="defaultValue">Default value to return if the variable isn't found</param>
+            <returns>Value of variable or defaultValue if not found</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.Lookup(`0,System.Object)">
+            <summary>
+            Find the value to which the variable is bound
+            </summary>
+            <param name="v">Variable whose value to look up</param>
+            <param name="defaultValue">Value to return if the variable isn't bound in this binding list</param>
+            <returns>Value of the variable or defaultValue</returns>
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.Bind(`0,System.Object)">
+            <summary>
+            Make a new binding list with specified additional binding
+            USE STATIC VERSION IF ORIGINAL LIST MIGHT BE NULL
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.BindingList`1.Bind(Step.Interpreter.BindingList{`0},`0,System.Object)">
+            <summary>
+            Make a new binding list with specified additional binding
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.Builtins">
+            <summary>
+            Implementations of built-in, but first-order primitives
+            Higher-order primitives are in HigherOrderBuiltins.cs
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Builtins.DefineGlobals">
+            <summary>
+            Add the built-in primitives to the global module.
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.Call">
+            <summary>
+            A step that involves calling another task as a subtask
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Call.#ctor(System.Object,System.Object[],Step.Interpreter.Step)">
+            <summary>
+            A step that involves calling a sub-task
+            </summary>
+            <param name="task">A term whose value is the sub-task to execute</param>
+            <param name="args">Terms for the arguments of the call</param>
+            <param name="next">Next step in the step chain of whatever method this belongs to</param>
+        </member>
+        <member name="M:Step.Interpreter.Call.MakeCall(System.Object,Step.Interpreter.Step)">
+            <summary>
+            Make a new call step to the specified task, with no arguments.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Call.MakeCall(System.Object,System.Object,Step.Interpreter.Step)">
+            <summary>
+            Make a new call step to the specified task, with the specified argument.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Call.MakeCall(System.Object,System.Object,System.Object,Step.Interpreter.Step)">
+            <summary>
+            Make a new call step to the specified task, with the specified arguments.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Call.MakeCall(System.Object,System.Object,System.Object,System.Object,Step.Interpreter.Step)">
+            <summary>
+            Make a new call step to the specified task, with the specified arguments.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Call.Task">
+            <summary>
+            Term (e.g. variable) representing the task to call
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Call.Arglist">
+            <summary>
+            Terms representing the arguments to the subtask.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Call.SourceText">
+            <summary>
+            Regenerates an approximation to the source code for this call
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Call.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Attempt to run this task
+            </summary>
+            <param name="output">Output to which to write text</param>
+            <param name="env">Variable binding information</param>
+            <param name="k">Continuation to call at the end of this step's step-chain</param>
+            <returns>True if this steps, the rest of its step-chain, and the continuation all succeed.</returns>
+        </member>
+        <member name="T:Step.Interpreter.CallException">
+            <summary>
+            Signals that something went wrong in a call to a task
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CallException.Task">
+            <summary>
+            The task the program attempted to call
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CallException.Arguments">
+            <summary>
+            The arguments passed to the task
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CallException.#ctor(System.Object,System.Object[],System.String)">
+            <summary>
+            Signal that some problem occurred with the call to a task
+            </summary>
+            <param name="task">The task that was called</param>
+            <param name="arguments">Its arguments</param>
+            <param name="message">Message to print</param>
+        </member>
+        <member name="T:Step.Interpreter.CallFailedException">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.CallFailedException.#ctor(System.Object,System.Object[])">
+            <summary>
+            Indicates that a call to a Step task that shouldn't be able to fail did fail.
+            </summary>
+            <param name="task">Task called</param>
+            <param name="arguments">Arguments</param>
+        </member>
+        <member name="T:Step.Interpreter.CoolStep">
+            <summary>
+            A cooldown timer that can be placed anyplace in a method.
+            After succeeding, it will fail for Duration subsequent calls.
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.EmitStep">
+            <summary>
+            A step that dumps a fixed set of tokens to the output.
+            EmitSteps always succeed
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.EmitStep.Text">
+            <summary>
+            Fixed sequence of tokens to output when this step is performed
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.EmitStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Output Text and succeed.
+            </summary>
+            <param name="output">When to write the text</param>
+            <param name="e">Variable info.  Not used, but passed on to continuation</param>
+            <param name="k">Continuation to run after the end of this method.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Step.Interpreter.HigherOrderBuiltins">
+            <summary>
+            Implementations of higher-order builtin primitives.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.MaxMinDriver(System.String,System.Object[],System.Int32,Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Core implementation of both Max and Min
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.HigherOrderBuiltins.CapturedState">
+            <summary>
+            Used to record the results of a call so those results can be reapplied later.
+            Used for all-solutions and maximization meta-predicates
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Calls a task with the specified arguments and allows the user to provide their own continuation.
+            The only (?) use case for this is when you want to forcibly generate multiple solutions
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+            <summary>
+            Find all solutions to the specified task and arguments.  Return a list of the arglists for each solution.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+            <summary>
+            Find all solutions to the specified task and arguments.  Return a list of the text outputs of each solution.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutionsFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Calls all the tasks in the body and allows the user to provide their own continuation.
+            The only (?) use case for this is when you want to forcibly generate multiple solutions
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionTextFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+            <summary>
+            Find all solutions to the specified sequence of calls.  Return a list of the text outputs of each solution.
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.Method">
+            <summary>
+            Internal representation of a method for performing a CompoundTask
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.Task">
+            <summary>
+            Task for which this is a method
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.ArgumentPattern">
+            <summary>
+            Terms (variables or values) to unify with the arguments in a call to test whether this method is appropriate
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.FilePath">
+            <summary>
+            File from which this method was loaded
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.LineNumber">
+            <summary>
+            Starting line number of this method in FilePath
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.LocalVariableNames">
+            <summary>
+            LocalVariables used in this method
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Method.StepChain">
+            <summary>
+            First Step in the linked list of steps constituting this method
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Method.Try(System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Attempt to run this method
+            </summary>
+            <param name="args">Arguments from the call to the method's task</param>
+            <param name="output">Output buffer to write to</param>
+            <param name="env">Variable binding information</param>
+            <param name="k">Continuation to call if method succeeds</param>
+            <returns>True if the method and its continuation succeeded</returns>
+        </member>
+        <member name="M:Step.Interpreter.Method.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.MethodCallFrame">
+            <summary>
+            Reifies a call to a method
+            Used only so that there's a data structure that can be walked to generate a stack backtrace
+            NOT THREAD SAFE
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.CurrentFrame">
+            <summary>
+            The MethodCallFrame for the most recently called frame
+            NOT THREAD SAFE
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.Method">
+            <summary>
+            The method being called
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.BindingsAtCallTime">
+            <summary>
+            The logic variable binding list at the time of the call
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.Locals">
+            <summary>
+            The local variables of the environment of the call
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.Parent">
+            <summary>
+            Parent frame - this is the frame of the calling method, not the most recently executed task
+            The two are the same for deterministic languages, but can be different for non-deterministic ones
+            For example, if A calls B then C and B calls D, then on entry to D, then the method call frame chain
+            entry to C is just C -> A.
+            
+            However, the real C# execution stack looks like:
+               C -> D -> B -> A
+            Because if C fails, we have to backtrack to D, not to A.  
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.Arglist">
+            <summary>
+            The effective argument list of the call
+            This has to get reconstructed from the ArgumentPattern of the method,
+            which is fixed across all calls and contains LocalVariableName objects
+            in place of the actual LogicVariables they name (since the latter vary
+            from call to call), and the Locals array, which contains the specific
+            logicVariables used in this particular call.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.MethodCallFrame.GetCallSourceText(Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
+            <summary>
+            Regenerates the textual version of the call in this frame
+            </summary>
+            <param name="unifications">Binding list currently in effect.  This will generally be whatever the most recent binding list of the interpreter is.</param>
+        </member>
+        <member name="T:Step.Interpreter.UndefinedVariableException">
+            <summary>
+            Global variable was referenced that was never given a value in the relevant module.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.UndefinedVariableException.#ctor(Step.StateVariableName)">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.LocalVariableName">
+            <summary>
+            The formal variable name for a local variable.
+            This is not the run-time local variable itself, which differs from call to call.
+            To get the run-time variable for a specific call, use
+            BindingEnvironment.Local[LocalVariableName.Index].  This will be a LogicVariable,
+            which can be dereferenced through the BindingEnvironment's Unifications field to
+            get the actual value of the variable.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.LocalVariableName.Name">
+            <summary>
+            Name of the variable.
+            Different methods with variables with the same name have different LocalVariableName objects
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.LocalVariableName.Index">
+            <summary>
+            Position in the method's stack frame (the Locals field of the BindingEnvironment) of the LogicVariable
+            holding this variable's value.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.LocalVariableName.#ctor(System.String,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.LocalVariableName.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.LogicVariable">
+            <summary>
+            A variable that can be aliased to values and/or other variables using BindingEnvironment.Unify.
+            It works like logic variables in any other programming language that has them, although they're
+            implemented using deep binding through the Unifications list in the BindingEnvironment, rather than
+            shallow binding with a trail (i.e. an undo stack).
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.LogicVariable.Name">
+            <summary>
+            Name of the variable.
+            This is for debugging purposes only.  It has no functional role.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.LogicVariable.#ctor(Step.Interpreter.LocalVariableName)">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Interpreter.LogicVariable.DebuggerName">
+            <summary>
+            The name as it should appear in the debugger.
+            This name has the UID appended rather than just the raw Name field
+            so that different variables with the same Name can be distinguished.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.LogicVariable.Uid">
+            <summary>
+            A unique counter distinguishing this LogicVariable from all others
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.LogicVariable.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.PartialOutput">
+            <summary>
+            Tracks the output buffer and state of the text generated by a task.
+            The buffer is writable but the PartialOutput object is read-only.
+            Calling Append will write the buffer but return a new PartialOutput
+            struct, that is also read-only.
+            The read-only-ness is to make backtracking easy.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.PartialOutput.Buffer">
+            <summary>
+            Fixed buffer in which to hold the output
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.PartialOutput.Length">
+            <summary>
+            Amount of Buffer currently in use.
+            The output generated so far is in cells Buffer[0 ... Length-1]
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.#ctor(System.Int32)">
+            <summary>
+            Make an empty PartialOutput with a new buffer.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.#ctor(System.String[])">
+            <summary>
+            Make an empty PartialOutput that stores output in the specified buffer.
+            </summary>
+            <param name="buffer"></param>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.NewEmpty">
+            <summary>
+            Make an empty PartialOutput with a new buffer.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.Append(System.String[])">
+            <summary>
+            Add tokens to buffer and return a new PartialOutput with the updated length.
+            Upon backtracking, the new PartialOutput can be thrown away and this one
+            reused.
+            </summary>
+            <param name="tokens">Tokens to add to output</param>
+            <returns>New buffer state</returns>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.Append(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Add tokens to buffer and return a new PartialOutput with the updated length.
+            Upon backtracking, the new PartialOutput can be thrown away and this one
+            reused.
+            </summary>
+            <param name="tokens">Tokens to add to output</param>
+            <returns>New buffer state</returns>
+        </member>
+        <member name="P:Step.Interpreter.PartialOutput.Output">
+            <summary>
+            Tokens output so far.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.PartialOutput.AsString">
+            <summary>
+            The text generated so far, as a single string.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.PartialOutput.Difference(Step.Interpreter.PartialOutput@,Step.Interpreter.PartialOutput@)">
+            <summary>
+            Return an array of the strings added to an output buffer between before and after
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask">
+            <summary>
+            Definitions used in making Tasks that are implemented directly as C# code.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.NamePrimitive``1(System.String,``0)">
+            <summary>
+            Assign a name to a delegate implementing a primitive so that it can be written properly in stack traces
+            This is necessary because delegates are otherwise anonymous
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.DefineSurrogate(System.Object,System.Delegate)">
+            <summary>
+            Tell the system that when surrogate is called as if it were a task, the specified implementation should be used instead.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.CheckArgument``1(System.String,System.Object,Step.Interpreter.BindingEnvironment,System.Object[],``0@,Step.Interpreter.LogicVariable@)">
+            <summary>
+            Performs generate type checking of an argument to a primitive
+            </summary>
+            <param name="taskName">Name of the primitive to which the argument was passed (used for error messages)</param>
+            <param name="arg">Argument passed to the primitive</param>
+            <param name="e">Binding environment passed to the primitive</param>
+            <param name="arglist">Full argument list to the task</param>
+            <param name="instantiated">Where to store the value if it is instantiated and of the expected type</param>
+            <param name="uninstantiated">Where to store the value if it is uninstantiated</param>
+            <typeparam name="T">Type expected for the argument</typeparam>
+            <returns>True if argument was instantiated</returns>
+            <exception cref="T:Step.Interpreter.ArgumentTypeException">If the argument was instantiated but of the wrong type</exception>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.Predicate0">
+            <summary>
+            A primitive that just succeeds or fails, without generating output
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.Predicate1">
+            <summary>
+            A primitive that just succeeds or fails, without generating output
+            </summary>
+            <param name="arg1">Argument to the predicate</param>
+            <returns>Whether the predicate should succeed or fail</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.Predicate2">
+            <summary>
+            A primitive that just succeeds or fails, without generating output
+            </summary>
+            <param name="arg1">Argument to the predicate</param>
+            <param name="arg2">Argument to the predicate</param>
+            <returns>Whether the predicate should succeed or fail</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.PredicateN">
+            <summary>
+            A predicate that takes a variable number of arguments.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.Predicate``1(System.String,System.Func{``0,System.Boolean})">
+            <summary>
+            Wraps a C# predicate in type checking code.
+            </summary>
+            <typeparam name="T">Expected type of the predicate's argument</typeparam>
+            <param name="name">Task name to give to the predicate</param>
+            <param name="realFunction">Implementation as a C# delegate</param>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.Predicate``2(System.String,System.Func{``0,``1,System.Boolean})">
+            <summary>
+            Wraps a C# predicate in type checking code.
+            </summary>
+            <typeparam name="T1">Expected type of the predicate's first argument</typeparam>
+            <typeparam name="T2">Expected type of the predicate's second argument</typeparam>
+            <param name="name">Task name to give to the predicate</param>
+            <param name="realFunction">Implementation as a C# delegate</param>
+            <returns></returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.MetaTask">
+            <summary>
+            Implementation of a higher-order primitive (one that takes task expressions as arguments)
+            </summary>
+            <param name="args">Raw, unevaluated arguments to the task</param>
+            <param name="o">Partial output accumulated so far</param>
+            <param name="e">Binding environment to use</param>
+            <param name="k">Continuation to call when successful</param>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGenerator0">
+            <summary>
+            A primitive task that generates text and always succeeds once (i.e. you can't backtrack to get different alternative versions of the text.
+            </summary>
+            <returns>Generated text</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGenerator1">
+            <summary>
+            A primitive task that generates text and always succeeds once (i.e. you can't backtrack to get different alternative versions of the text.
+            </summary>
+            <returns>Generated text</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGenerator2">
+            <summary>
+            A primitive task that generates text and always succeeds once (i.e. you can't backtrack to get different alternative versions of the text.
+            </summary>
+            <returns>Generated text</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGeneratorMetaTask">
+            <summary>
+            Implementation of a higher-order primitive that only generates text output
+            </summary>
+            <param name="args">Raw, unevaled arguments</param>
+            <param name="o">Partial output accumulated so far</param>
+            <param name="e">Binding environment to use</param>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.DeterministicText``1(System.String,System.Func{``0,System.Collections.Generic.IEnumerable{System.String}})">
+            <summary>
+            Wrap a C# procedure in type checking code and return it as a DeterministicTextGenerator1
+            </summary>
+            <param name="name">Name to give to the primitive method (for use in error reporting)</param>
+            <param name="realFunction">Implementation</param>
+            <typeparam name="T">Type of argument to task</typeparam>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.DeterministicText``2(System.String,System.Func{``0,``1,System.Collections.Generic.IEnumerable{System.String}})">
+            <summary>
+            Wrap a C# procedure in type checking code and return it as a DeterministicTextGenerator1
+            </summary>
+            <param name="name">Name to give to the primitive method (for use in error reporting)</param>
+            <param name="realFunction">Implementation</param>
+            <typeparam name="T1">Type of argument to task</typeparam>
+            <typeparam name="T2">Type of second argument to task</typeparam>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.NondeterministicTextGenerator0">
+            <summary>
+            A primitive task that generates text and succeeds a variable number of times (possibly not at all)
+            </summary>
+            <returns>Each element is a string enumeration for one possible success of this primitive.</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.NondeterministicTextGenerator1">
+            <summary>
+            A primitive task that generates text and succeeds a variable number of times (possibly not at all)
+            </summary>
+            <returns>Each element is a string enumeration for one possible success of this primitive.</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.NondeterministicTextGenerator2">
+            <summary>
+            A primitive task that generates text and succeeds a variable number of times (possibly not at all)
+            </summary>
+            <returns>Each element is a string enumeration for one possible success of this primitive.</returns>
+        </member>
+        <member name="T:Step.Interpreter.PrimitiveTask.NonDeterministicRelation">
+            <summary>
+            A relation that behaves like a full logic programming predicate, i.e. can run forwards and backward, succeed multiple times, etc.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.GeneralRelation``1(System.String,System.Func{``0,System.Boolean},System.Func{System.Collections.Generic.IEnumerable{``0}})">
+            <summary>
+            Make a general user-defined unary predicate
+            </summary>
+            <param name="name">Name of the predicate</param>
+            <param name="inMode">Implementation when argument is value</param>
+            <param name="outMode">Implementation when argument is an unbound variable</param>
+            <typeparam name="T">Type of argument</typeparam>
+            <returns>Implementation that can be called by internal code</returns>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.GeneralRelation``2(System.String,System.Func{``0,``1,System.Boolean},System.Func{``0,System.Collections.Generic.IEnumerable{``1}},System.Func{``1,System.Collections.Generic.IEnumerable{``0}},System.Func{System.Collections.Generic.IEnumerable{System.ValueTuple{``0,``1}}})">
+            <summary>
+            Make a general user-defined binary predicate
+            </summary>
+            <param name="name">Name of the predicate</param>
+            <param name="inInMode">Implementation for when both arguments are bound</param>
+            <param name="inOutMode">Implementation for when the first argument is bound and the second isn't</param>
+            <param name="outInMode">Implementation for when the first argument is unbound and the second is</param>
+            <param name="outOutMode">Implementation for when neither argument is bound</param>
+            <typeparam name="T1">Type of the first argument</typeparam>
+            <typeparam name="T2">Type of the second argument</typeparam>
+            <returns>Implementation that can be called by internal code</returns>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.UnaryFunction``2(System.String,System.Func{``0,``1},System.Func{``1,``0})">
+            <summary>
+            Make a binary relation from an implementation of a unary function
+            </summary>
+            <param name="name">Name of the function (for error messages</param>
+            <param name="f">Function</param>
+            <param name="fInverse">Optional inverse of the function</param>
+            <typeparam name="TIn">Domain of the function</typeparam>
+            <typeparam name="TOut">Range of the function</typeparam>
+            <returns>Implementation of the relation</returns>
+        </member>
+        <member name="T:Step.Interpreter.CompoundTask">
+            <summary>
+            Task implemented as a set of methods, each composed of a series of Steps (sub-tasks)
+            Tasks defined by user code are CompoundTasks
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.Name">
+            <summary>
+            Name, for debugging purposes
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.ArgCount">
+            <summary>
+            Number of arguments expected by the task
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.Methods">
+            <summary>
+            Methods for accomplishing the task
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.Shuffle">
+            <summary>
+            True if the methods of the task should be tried in random order
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.Deterministic">
+            <summary>
+            True if this task should only ever generate at most one output
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.MustSucceed">
+            <summary>
+            True if it's an error for this call not to succeed at least once
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.AddMethod(System.Object[],Step.Interpreter.LocalVariableName[],Step.Interpreter.Step,Step.Interpreter.CompoundTask.TaskFlags,System.String,System.Int32)">
+            <summary>
+            Add a new method for achieving this task
+            </summary>
+            <param name="argumentPattern">Terms (variables or values) to unify with the arguments in a call to test whether this method is appropriate</param>
+            <param name="localVariableNames">LocalVariables used in this method</param>
+            <param name="stepChain">Linked list of Step objects to attempt to execute when running this method</param>
+            <param name="path">File from which the method was read</param>
+            <param name="lineNumber">Line number where the method starts in the file</param>
+            <param name="newFlags">Additional flags to set for the task</param>
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.EraseMethods">
+            <summary>
+            Remove all defined methods for this task
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.Step">
+            <summary>
+            Represents a step in a method
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Step.#ctor(Step.Interpreter.Step)">
+            <summary>
+            Make a new step
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.Step.Next">
+            <summary>
+            Next step in the step chain of the method to which this step belongs.
+            Null, if this is the last step in the chain.
+            </summary>
+        </member>
+        <member name="T:Step.Interpreter.Step.Continuation">
+            <summary>
+            A continuation is a procedure to call when a step has completed successfully.
+            It takes as arguments the things that might have changed in the process of running the step.
+            </summary>
+            <returns>True if everything completed successfully, false if we need to backtrack</returns>
+        </member>
+        <member name="M:Step.Interpreter.Step.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Attempt to run this step.
+            </summary>
+            <param name="output">Output accumulated so far</param>
+            <param name="e">Variable binding information to use in this step</param>
+            <param name="k">Procedure to run if this step and the other steps in its chain are successful</param>
+            <returns>True if all steps in the chain, and the continuation are all successful.  False means we're backtracking</returns>
+        </member>
+        <member name="M:Step.Interpreter.Step.Continue(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Run any remaining steps in the chain, otherwise run the continuation.
+            </summary>
+            <returns>True if all steps in the chain, and the continuation are all successful.  False means we're backtracking</returns>
+        </member>
+        <member name="T:Step.State">
+            <summary>
+            Contains the current dynamic state: the result of any set expressions that have been executed,
+            or any other state changes that might need to be undone upon backtracking
+            </summary>
+        </member>
+        <member name="F:Step.State.Bindings">
+            <summary>
+            Binding list for global variables
+            </summary>
+        </member>
+        <member name="M:Step.State.Bind(Step.Interpreter.StateElement,System.Object)">
+            <summary>
+            Binds the specified state element to the specified value
+            </summary>
+            <returns>New dynamic state</returns>
+        </member>
+        <member name="M:Step.State.Lookup(Step.Interpreter.StateElement)">
+            <summary>
+            Returns the value of the specified dynamic state element
+            </summary>
+        </member>
+        <member name="M:Step.State.LookupOrDefault(Step.Interpreter.StateElement,System.Object)">
+            <summary>
+            Returns the value of the specified dynamic state element or the specified default value, if the state element
+            has no value.
+            </summary>
+        </member>
+        <member name="M:Step.State.TryLookup(Step.Interpreter.StateElement,System.Object@)">
+            <summary>
+            Set result to the value of e and return true, if e is bound, else return false
+            </summary>
+        </member>
+        <member name="F:Step.State.Empty">
+            <summary>
+            A State containing no bindings
+            </summary>
+        </member>
+        <member name="P:Step.State.Contents">
+            <summary>
+            Returns contents as a flat array, sorted.
+            Not performant - just use for examining the contents in the debugger.
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.RngExtensions.Shuffle``1(System.Collections.Generic.IList{``0})">
+            <summary>
+            Make a randomly permuted copy of sequence
+            </summary>
+        </member>
+        <member name="T:Step.Module">
+            <summary>
+            Stores values of global state variables
+            </summary>
+        </member>
+        <member name="F:Step.Module.RichTextStackTraces">
+            <summary>
+            Stack traces should be generated with Unity rich text markup
+            </summary>
+        </member>
+        <member name="F:Step.Module.dictionary">
+            <summary>
+            Table of values assigned by this module to different global variables
+            </summary>
+        </member>
+        <member name="F:Step.Module.Parent">
+            <summary>
+            Parent module to try if a variable can't be found in this module;
+            </summary>
+        </member>
+        <member name="T:Step.Module.BindHook">
+            <summary>
+            A user-defined procedure that can be called to import the value of a variable
+            </summary>
+            <param name="name">Variable to look up</param>
+            <param name="value">Value found, if any</param>
+            <returns>True if variable found</returns>
+        </member>
+        <member name="F:Step.Module.bindHooks">
+            <summary>
+            Optional list of hooks to try when a variable can't be found.
+            </summary>
+        </member>
+        <member name="F:Step.Module.Global">
+            <summary>
+            The global Module that all other modules inherit from by default.
+            </summary>
+        </member>
+        <member name="F:Step.Module.Name">
+            <summary>
+            Name of the module for debugging purposes
+            </summary>
+        </member>
+        <member name="M:Step.Module.#ctor(System.String)">
+            <summary>
+            Make a module that inherits from Global
+            </summary>
+        </member>
+        <member name="M:Step.Module.#ctor(System.String,Step.Module,System.String[])">
+            <summary>
+            Make a module with the Global module as parent and load the specified source files into it.
+            </summary>
+            <param name="name">Name of the Module, for debugging purposes</param>
+            <param name="parent">Parent module for this module.  This will usually be Module.Global</param>
+            <param name="sourceFiles">Definition files to load</param>
+        </member>
+        <member name="M:Step.Module.#ctor(System.String,Step.Module)">
+            <summary>
+            Make a module that inherits from the specified parent
+            </summary>
+        </member>
+        <member name="P:Step.Module.Item(System.String)">
+            <summary>
+            Returns the value of the variable with the specified name
+            </summary>
+            <param name="variableName">Name (string) of the variable</param>
+            <returns>Value</returns>
+            <exception cref="T:Step.Interpreter.UndefinedVariableException">If getting a variable and it is not listed in this module or its ancestors</exception>
+        </member>
+        <member name="P:Step.Module.Item(Step.StateVariableName)">
+            <summary>
+            Returns the value of the global variable with the specified name
+            </summary>
+            <param name="v">The variable</param>
+            <returns>Value</returns>
+            <exception cref="T:Step.Interpreter.UndefinedVariableException">If getting a variable and it is not listed in this module or its ancestors</exception>
+        </member>
+        <member name="M:Step.Module.Defines(System.String)">
+            <summary>
+            True if this module has its own definition of the specified variable
+            </summary>
+        </member>
+        <member name="M:Step.Module.Defines(Step.StateVariableName)">
+            <summary>
+            True if this module has its own definition of the specified variable
+            </summary>
+        </member>
+        <member name="M:Step.Module.FindTask(Step.StateVariableName,System.Int32,System.Boolean,System.String,System.Int32)">
+            <summary>
+            Find the CompoundTask named by the specified variable, creating one if necessary.
+            </summary>
+            <param name="v">Task variable</param>
+            <param name="argCount">Number of arguments the task is expected to have</param>
+            <param name="createIfNeeded">If true and variable is unbound, create a new task to bind it to.</param>
+            <param name="path">Source file of method referencing this task, if relevant</param>
+            <param name="lineNumber">Source file line number of method referencing this task, if relevant</param>
+            <returns>The task</returns>
+            <exception cref="T:System.ArgumentException">If variable is defined but isn't a CompoundTask</exception>
+        </member>
+        <member name="M:Step.Module.Call(Step.State,System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments and returns the text it generates
+            </summary>
+            <param name="state">Global variable bindings to use in the call, if any.</param>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+            <returns>Generated text as one big string, and final values of global variables.  Or null if the task failed.</returns>
+        </member>
+        <member name="M:Step.Module.Call(System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments and returns the text it generates
+            </summary>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+            <returns>Generated text as one big string, and final values of global variables.  Or null if the task failed.</returns>
+        </member>
+        <member name="M:Step.Module.CallPredicate(Step.State,System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments as a predicate and returns true if it succeeds
+            This call will fail if the task attempts to generate output.
+            </summary>
+            <param name="state">Global variable bindings to use in the call, if any.</param>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+        </member>
+        <member name="M:Step.Module.CallFunction``1(Step.State,System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments as a function and returns the value of its last argument
+            This call will fail if the task attempts to generate output.
+            </summary>
+            <param name="state">Global variable bindings to use in the call, if any.</param>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+        </member>
+        <member name="M:Step.Module.LoadDefinitions(System.String)">
+            <summary>
+            Load the definitions in the specified file
+            </summary>
+            <param name="path">Path to the file</param>
+        </member>
+        <member name="M:Step.Module.LoadDefinitions(System.IO.TextReader,System.String)">
+            <summary>
+            Load the method definitions from stream into this module
+            </summary>
+        </member>
+        <member name="M:Step.Module.AddDefinitions(System.String[])">
+            <summary>
+            Parse and add the method definitions to this module
+            </summary>
+        </member>
+        <member name="M:Step.Module.FromDefinitions(System.String[])">
+            <summary>
+            Make a new module, then parse and add the specified method definitions.
+            </summary>
+        </member>
+        <member name="M:Step.Module.ParseAndExecute(System.String)">
+            <summary>
+            Parse and run the specified code
+            </summary>
+            <param name="code">Code to run.  This will be used as the RHS of a method for the task TopLevelCall</param>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Module.AddBindHook(Step.Module.BindHook)">
+            <summary>
+            Add a procedure to call when a variable isn't found.
+            If the procedure returns a value for it, that value is added to the module.
+            </summary>
+            <param name="hook">Procedure to use to import variables</param>
+        </member>
+        <member name="M:Step.Module.Warnings">
+            <summary>
+            Returns any warnings found by code analysis
+            </summary>
+        </member>
+        <member name="P:Step.Module.StackTrace">
+            <summary>
+            Return a trace of the method calls from the current frame.
+            </summary>
+        </member>
+        <member name="T:Step.Module.TraceHandler">
+            <summary>
+            An event handler to be called on every method call.
+            Used to implement single-stepping in a debugger
+            </summary>
+        </member>
+        <member name="F:Step.Module.Trace">
+            <summary>
+            An event handler to be called on every method call.
+            Used to implement single-stepping in a debugger
+            </summary>
+        </member>
+        <member name="T:Step.StateVariableName">
+            <summary>
+            An object representing the name of a variable held in a Module
+            This does not store the value itself; it's just a key to the
+            tables in the Modules.  So it's like a symbol in lisp.
+            </summary>
+        </member>
+        <member name="F:Step.StateVariableName.SymbolTable">
+            <summary>
+            Table mapping names to existing global variables
+            </summary>
+        </member>
+        <member name="M:Step.StateVariableName.Named(System.String)">
+            <summary>
+            Return the unique global variable with this name.
+            Creates and stores the variable if necessary.
+            </summary>
+            <param name="name">Name for the variable</param>
+        </member>
+        <member name="T:Step.Parser.DefinitionStream">
+            <summary>
+            Reads a stream of method definitions from a TextReader.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.#ctor(System.IO.TextReader,Step.Module,System.String)">
+            <summary>
+            Reads definitions from the specified stream
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.#ctor(Step.Parser.ExpressionStream,Step.Module)">
+            
+             Make a new definition stream
+             
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.Module">
+            <summary>
+            Module into which this is reading definitions
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.expressions">
+            <summary>
+            Expressions being read from the stream
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.end">
+            <summary>
+            True if we've hit the end of the stream
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.MoveNext">
+            <summary>
+            Get the next expression from expressions, updating end.
+            </summary>
+        </member>
+        <member name="P:Step.Parser.DefinitionStream.Peek">
+            <summary>
+            Current expression
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.Get">
+            <summary>
+            Return the current expression and move to the next
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.SwallowNewlines">
+            <summary>
+            Skip forward to the next token that isn't a newline
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.multiLine">
+            <summary>
+            The current definition is a single line definition
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.EndOfLine">
+            <summary>
+            The actual token representation of an end of line
+            </summary>
+        </member>
+        <member name="P:Step.Parser.DefinitionStream.EndOfDefinition">
+            <summary>
+            True if we're at the end of the current definition
+            </summary>
+        </member>
+        <member name="P:Step.Parser.DefinitionStream.EndOfLineToken">
+            <summary>
+            True if we're at an end of line token
+            </summary>
+        </member>
+        <member name="P:Step.Parser.DefinitionStream.ExplicitEndToken">
+            <summary>
+            True if we're at an "[end]" expression
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.IsLocalVariableName(System.Object)">
+            <summary>
+            True if the string is a valid local variable name
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.IsNonAnonymousLocalVariableName(System.Object)">
+            <summary>
+            The token is a valid name of a non-anonymous local variable
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.IsGlobalVariableName(System.Object)">
+            <summary>
+            True if the string is a valid global variable name
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.locals">
+            <summary>
+            Local variables of the definition currently being parsed.
+            </summary>
+        </member>
+        <member name="F:Step.Parser.DefinitionStream.tokensToEmit">
+            <summary>
+            Tokens being accumulated for the current Emit step of the current method.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.GetLocal(System.String)">
+            <summary>
+            Return the local variable for the current method with the specified name,
+            creating one and adding it to locals, if there isn't one.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.CanonicalizeArglist(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Identify tokens that identify non-strings (variables, numbers) and replace them
+            with their internal representations
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.Canonicalize(System.Object)">
+            <summary>
+            Return the internal representation for the term denoted by the specified token
+            </summary>
+        </member>
+        <member name="P:Step.Parser.DefinitionStream.Definitions">
+            <summary>
+            Read, parse, and return the information for all method definitions in the stream
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadDefinition">
+            <summary>
+            Read and parse the next method definition
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadHead">
+            <summary>
+            Read the task name and argument pattern
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.TryProcessMethodCall(Step.Parser.DefinitionStream.ChainBuilder)">
+            <summary>
+            If we're looking at a method call, compile it.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadAlternativeBranches(System.String)">
+            <summary>
+            Read the text of a branch of a [randomly] or [firstOf] expression
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadCase(System.Object)">
+            <summary>
+            Read a new CompoundTask that takes one argument, that corresponds to the body of an inline case expression.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.TryProcessMentionExpression(Step.Parser.DefinitionStream.ChainBuilder)">
+            <summary>
+            If we're looking at a mention expression (?x, ?x/Foo, ?x/Foo/Bar, etc.), compile it.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadComplexMentionExpression(Step.Parser.DefinitionStream.ChainBuilder,Step.Interpreter.LocalVariableName)">
+            <summary>
+            Read an expression of the form ?local/STUFF
+            Called after ?local has already been read.
+            </summary>
+            <param name="chain">Chain to add to</param>
+            <param name="local">The variable before the /</param>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.ReadMentionExpressionTail(Step.Parser.DefinitionStream.ChainBuilder,Step.Interpreter.LocalVariableName,System.Object)">
+            <summary>
+            Called after the last "/" of a complex mention expression.
+            </summary>
+            <param name="chain">Chain to add to</param>
+            <param name="local">Result of the expression from before the last "/"</param>
+            <param name="targetVar">Task to call on local</param>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.TryProcessTextBlock(Step.Parser.DefinitionStream.ChainBuilder)">
+            <summary>
+            If this is a sequence of fixed text tokens, compile them into an EmitStep.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.CheckForWarnings">
+            <summary>
+            Issue warnings for any singleton variables
+            </summary>
+        </member>
+        <member name="T:Step.Parser.ExpressionStream">
+            <summary>
+            Transforms a sequence of tokens into a sequence of expressions
+            An expression is either a token, or an array of tokens generated by a bracketed expression.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.ExpressionStream.#ctor(System.IO.TextReader,System.String)">
+            <summary>
+            Make an object that reads a stream of nested expressions from a file
+            </summary>
+        </member>
+        <member name="M:Step.Parser.ExpressionStream.#ctor(Step.Parser.TokenStream)">
+            <summary>
+            Make an object that reads a stream of nested expressions from a TokenStream
+            </summary>
+        </member>
+        <member name="P:Step.Parser.ExpressionStream.FilePath">
+            <summary>
+            File from which this data is being read, if any
+            </summary>
+        </member>
+        <member name="P:Step.Parser.ExpressionStream.LineNumber">
+            <summary>
+            Line number in file from which we are currently reading.
+            </summary>
+        </member>
+        <member name="F:Step.Parser.ExpressionStream.tokens">
+            <summary>
+            Sequence of tokens read from the original stream
+            </summary>
+        </member>
+        <member name="F:Step.Parser.ExpressionStream.end">
+            <summary>
+            True if we've hit the end of the stream
+            </summary>
+        </member>
+        <member name="M:Step.Parser.ExpressionStream.MoveNext">
+            <summary>
+            Move to the next token in the stream
+            </summary>
+        </member>
+        <member name="M:Step.Parser.ExpressionStream.Get">
+            <summary>
+            Return the current token and move to the next
+            </summary>
+        </member>
+        <member name="P:Step.Parser.ExpressionStream.Peek">
+            <summary>
+            Returns the current token without advancing to the next token.
+            </summary>
+        </member>
+        <member name="P:Step.Parser.ExpressionStream.Expressions">
+            <summary>
+            Sequence of tokens, with bracketed groups of expressions replace with a single array.
+            </summary>
+        </member>
+        <member name="T:Step.Parser.SyntaxError">
+            <summary>
+            Represents a syntactic error in a .step file
+            </summary>
+        </member>
+        <member name="M:Step.Parser.SyntaxError.#ctor(System.String,System.String,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Parser.TokenStream">
+            <summary>
+            Transforms a stream of characters into a sequence of tokens (strings not containing whitespace)
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.LeftDoubleQuote">
+            <summary>
+            The Unicode left double quote
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.RightDoubleQuote">
+            <summary>
+            The Unicode right double quote
+            </summary>
+        </member>
+        <member name="M:Step.Parser.TokenStream.#ctor(System.IO.TextReader,System.String)">
+            <summary>
+            Make a new token stream reading from the specified text stream
+            </summary>
+            <param name="input">Stream to read from</param>
+            <param name="filePath">Path of the stream if it comes from a file (for debug messages)</param>
+        </member>
+        <member name="F:Step.Parser.TokenStream.FilePath">
+            <summary>
+            Path to file being read from, if any
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.LineNumber">
+            <summary>
+            Line number of file being read from
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.token">
+            <summary>
+            Buffer for accumulating characters into tokens
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.HaveToken">
+            <summary>
+            True it token buffer non-empty
+            </summary>
+        </member>
+        <member name="M:Step.Parser.TokenStream.AddCharToToken">
+            <summary>
+            Add current stream character to token
+            </summary>
+        </member>
+        <member name="M:Step.Parser.TokenStream.ConsumeToken">
+            <summary>
+            Return the accumulated characters as a token and clear the token buffer.
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.input">
+            <summary>
+            The raw text stream
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.End">
+            <summary>
+            True if we're at the end of the stream
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.Peek">
+            <summary>
+            Return the current character, without advancing
+            </summary>
+        </member>
+        <member name="M:Step.Parser.TokenStream.Get">
+            <summary>
+            Return the current character and advance to the next
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Parser.TokenStream.Skip">
+            <summary>
+            Synonym for Get().  Used to indicate the character is being deliberately thrown away.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.TokenStream.SkipWhitespace">
+            <summary>
+            Skip over all whitespace chars, except newlines (they're considered tokens)
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.IsWhiteSpace">
+            <summary>
+            Current character is non-newline whitespace
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.IsPunctuationNotQuestionMarkOrLT">
+            <summary>
+            Current character is some punctuation symbol other than '?'
+            '?' is treated specially because it's allowed to start a variable-name token.
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.IsEndOfWord">
+            <summary>
+            True if the current character can't be a continuation of a word token.
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.Tokens">
+            <summary>
+            The stream of tokens read from the stream.
+            </summary>
+        </member>
+        <member name="T:Step.TextUtilities">
+            <summary>
+            Random utilities for working with text
+            </summary>
+        </member>
+        <member name="M:Step.TextUtilities.Untokenize(System.Collections.Generic.IEnumerable{System.String},System.Boolean,System.Boolean,System.String)">
+            <summary>
+            Convert a sequence of tokens into a single text string, adding spaces where appropriate.
+            </summary>
+        </member>
+        <member name="M:Step.TextUtilities.Capitalize(System.String)">
+            <summary>
+            Force first character of token to be capitalized.
+            </summary>
+        </member>
+        <member name="M:Step.TextUtilities.PunctuationToken(System.String)">
+            <summary>
+            True when string consists of just a single punctuation mark.
+            </summary>
+        </member>
+    </members>
+</doc>

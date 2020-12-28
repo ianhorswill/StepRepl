@@ -1,0 +1,27 @@
+[randomly] 
+Compatibility ?a ?b ?interest: [Interest ?a ?interest] [Interest ?b ?interest]
+Compatibility ?a ?b ?trait: [Trait ?a ?trait] [Trait ?b ?trait]
+Compatibility ?a ?b [sharedInterest lolcats].
+Compatibility ?a ?b [sharedInterest [love dearLeader]].
+Compatibility ?a ?b [sharedInterest [hate negativePeople]].
+
+Say [sharedInterest [love dearLeader]]: their deep and abiding love of Dear Leader
+Say [sharedInterest [hate negativePeople]]: how they both hate people with negative energy
+Say [sharedInterest ?what]: their shared interest in ?what/Write
+
+[randomly]
+Incompatibility ?a ?b [unsharedInterest2 ?i]: [Interest ?a ?i] [Not [Interest ?b ?i]]
+Incompatibility ?a ?b [unsharedInterest1 ?i]: [Not [Interest ?a ?i]] [Interest ?b ?i]
+Incompatibility ?a ?b [incompatibleTraits ?a ?b ?ta ?tb]: [Trait ?a ?ta] [Trait ?b ?tb]
+Incompatibility ?a ?b [GenericIncompatibility ?g].
+
+Say [unsharedInterest1 ?i]: their lack of interest in ?i/Write
+Say [unsharedInterest2 ?i]: their annoying obsession with ?i/Write
+Say [incompatibleTraits ?a ?b ?ta ?tb]: ?a being ?ta/Write
+
+[randomly]
+GenericIncompatibility toothpaste.
+Say toothpate: squeezing toothpaste from the middle of the tube
+GenericIncompatibility toiletPaper.
+Say toiletPaper: putting the toilet paper roll on the wrong way
+GenericIncompatibility snoring.

@@ -25,12 +25,61 @@
             </summary>
         </member>
         <member name="M:Step.Cons.#ctor(System.Object,Step.Cons)">
-            <inheritdoc />
+            <summary>
+            Make a list with a new element at a beginning
+            </summary>
         </member>
         <member name="M:Step.Cons.GetEnumerator">
-            <inheritdoc />
+            <summary>
+            Enumerates the elements of the list
+            </summary>
         </member>
         <member name="M:Step.Cons.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.CopyTo(System.Array,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.Count">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.SyncRoot">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.IsSynchronized">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.Add(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.Contains(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.CopyTo(System.Object[],System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.Clear">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.IndexOf(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.Insert(System.Int32,System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.Remove(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Cons.RemoveAt(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.Item(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.IsReadOnly">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Cons.IsFixedSize">
             <inheritdoc />
         </member>
         <member name="T:Step.Interpreter.SequenceStep">
@@ -38,12 +87,15 @@
             Implements a sequence in which each successive call invokes the next branch
             </summary>
         </member>
+        <member name="P:Step.Interpreter.SequenceStep.Callees">
+            <inheritdoc />
+        </member>
         <member name="M:Step.Interpreter.SequenceStep.#ctor(Step.Interpreter.Step[],Step.Interpreter.Step)">
             <summary>
             Makes a step that first calls the first branch, then on successive calls, invokes successive branches.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.SequenceStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.SequenceStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Run the next branch, or fail if we've run out of branches
             </summary>
@@ -101,12 +153,23 @@
         <member name="M:Step.Interpreter.ArgumentTypeException.#ctor(System.Object,System.Type,System.Object,System.Object[])">
             <inheritdoc />
         </member>
-        <member name="M:Step.Interpreter.ArgumentTypeException.Check(System.Object,System.Type,System.Object,System.Object[])">
+        <member name="M:Step.Interpreter.ArgumentTypeException.Check(System.Object,System.Type,System.Object,System.Object[],System.Boolean)">
             <summary>
             Check the specified argument value is of the right type.  If not, throw exception
             </summary>
             <param name="task">Name of task - used in error message if necessary</param>
             <param name="expected">Type expected</param>
+            <param name="actual">Value provided</param>
+            <param name="arglist">Full argument list of the task</param>
+            <param name="allowUninstantiated">If true, accept an unbound variable as a value</param>
+            <exception cref="T:Step.Interpreter.ArgumentTypeException">When value isn't of the expected type</exception>
+        </member>
+        <member name="M:Step.Interpreter.ArgumentTypeException.Cast``1(System.Object,System.Object,System.Object[])">
+            <summary>
+            Check the specified argument value is of the right type.
+            If so, return the argument cast to the type.  If not, throw exception
+            </summary>
+            <param name="task">Name of task - used in error message if necessary</param>
             <param name="actual">Value provided</param>
             <param name="arglist">Full argument list of the task</param>
             <exception cref="T:Step.Interpreter.ArgumentTypeException">When value isn't of the expected type</exception>
@@ -118,6 +181,11 @@
         </member>
         <member name="M:Step.Interpreter.ArgumentInstantiationException.#ctor(System.Object,Step.Interpreter.BindingEnvironment,System.Object[])">
             <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.ArgumentInstantiationException.Check(System.Object,System.Object,System.Boolean,Step.Interpreter.BindingEnvironment,System.Object[])">
+            <summary>
+            Check argument and throw instantiation exception if necessary.
+            </summary>
         </member>
         <member name="T:Step.Interpreter.BindingEnvironment">
             <summary>
@@ -365,13 +433,17 @@
             Regenerates an approximation to the source code for this call
             </summary>
         </member>
-        <member name="M:Step.Interpreter.Call.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="P:Step.Interpreter.Call.Callees">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.Call.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Attempt to run this task
             </summary>
             <param name="output">Output to which to write text</param>
             <param name="env">Variable binding information</param>
             <param name="k">Continuation to call at the end of this step's step-chain</param>
+            <param name="predecessor">Predecessor frame</param>
             <returns>True if this steps, the rest of its step-chain, and the continuation all succeed.</returns>
         </member>
         <member name="T:Step.Interpreter.CallException">
@@ -424,13 +496,14 @@
             Fixed sequence of tokens to output when this step is performed
             </summary>
         </member>
-        <member name="M:Step.Interpreter.EmitStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.EmitStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Output Text and succeed.
             </summary>
             <param name="output">When to write the text</param>
             <param name="e">Variable info.  Not used, but passed on to continuation</param>
             <param name="k">Continuation to run after the end of this method.</param>
+            <param name="predecessor">Predecessor frame</param>
             <returns></returns>
         </member>
         <member name="T:Step.Interpreter.HigherOrderBuiltins">
@@ -438,7 +511,7 @@
             Implementations of higher-order builtin primitives.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.MaxMinDriver(System.String,System.Object[],System.Int32,Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.MaxMinDriver(System.String,System.Object[],System.Int32,Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Core implementation of both Max and Min
             </summary>
@@ -449,29 +522,29 @@
             Used for all-solutions and maximization meta-predicates
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Calls a task with the specified arguments and allows the user to provide their own continuation.
             The only (?) use case for this is when you want to forcibly generate multiple solutions
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified task and arguments.  Return a list of the arglists for each solution.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified task and arguments.  Return a list of the text outputs of each solution.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutionsFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutionsFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Calls all the tasks in the body and allows the user to provide their own continuation.
             The only (?) use case for this is when you want to forcibly generate multiple solutions
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionTextFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionTextFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified sequence of calls.  Return a list of the text outputs of each solution.
             </summary>
@@ -511,7 +584,7 @@
             First Step in the linked list of steps constituting this method
             </summary>
         </member>
-        <member name="M:Step.Interpreter.Method.Try(System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.Method.Try(System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
             <summary>
             Attempt to run this method
             </summary>
@@ -519,10 +592,21 @@
             <param name="output">Output buffer to write to</param>
             <param name="env">Variable binding information</param>
             <param name="k">Continuation to call if method succeeds</param>
+            <param name="pre">Predecessor frame</param>
             <returns>True if the method and its continuation succeeded</returns>
         </member>
         <member name="M:Step.Interpreter.Method.ToString">
             <inheritdoc />
+        </member>
+        <member name="P:Step.Interpreter.Method.HeadString">
+            <summary>
+            The argument pattern for this method expressed as the course code for a call
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Method.Callees">
+            <summary>
+            All the tasks called by this method
+            </summary>
         </member>
         <member name="T:Step.Interpreter.MethodCallFrame">
             <summary>
@@ -552,9 +636,9 @@
             The local variables of the environment of the call
             </summary>
         </member>
-        <member name="F:Step.Interpreter.MethodCallFrame.Parent">
+        <member name="F:Step.Interpreter.MethodCallFrame.Caller">
             <summary>
-            Parent frame - this is the frame of the calling method, not the most recently executed task
+            Caller's frame - this is the frame of the calling method, not the most recently executed task
             The two are the same for deterministic languages, but can be different for non-deterministic ones
             For example, if A calls B then C and B calls D, then on entry to D, then the method call frame chain
             entry to C is just C -> A.
@@ -562,6 +646,21 @@
             However, the real C# execution stack looks like:
                C -> D -> B -> A
             Because if C fails, we have to backtrack to D, not to A.  
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.Predecessor">
+            <summary>
+            The method that succeeded immediately before this call
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.CallerChain">
+            <summary>
+            The chain of this frame and its callers
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.GoalChain">
+            <summary>
+            The chain of this frame and its predecessors
             </summary>
         </member>
         <member name="P:Step.Interpreter.MethodCallFrame.Arglist">
@@ -579,6 +678,9 @@
             Regenerates the textual version of the call in this frame
             </summary>
             <param name="unifications">Binding list currently in effect.  This will generally be whatever the most recent binding list of the interpreter is.</param>
+        </member>
+        <member name="M:Step.Interpreter.MethodCallFrame.ToString">
+            <inheritdoc />
         </member>
         <member name="T:Step.Interpreter.UndefinedVariableException">
             <summary>
@@ -802,6 +904,7 @@
             <param name="o">Partial output accumulated so far</param>
             <param name="e">Binding environment to use</param>
             <param name="k">Continuation to call when successful</param>
+            <param name="predecessor">Frame of the call that most recently succeeded</param>
         </member>
         <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGenerator0">
             <summary>
@@ -828,6 +931,7 @@
             <param name="args">Raw, unevaled arguments</param>
             <param name="o">Partial output accumulated so far</param>
             <param name="e">Binding environment to use</param>
+            <param name="predecessor">Method call that succeeded immediately before this call</param>
         </member>
         <member name="M:Step.Interpreter.PrimitiveTask.DeterministicText``1(System.String,System.Func{``0,System.Collections.Generic.IEnumerable{System.String}})">
             <summary>
@@ -958,6 +1062,11 @@
             Remove all defined methods for this task
             </summary>
         </member>
+        <member name="P:Step.Interpreter.CompoundTask.Callees">
+            <summary>
+            All the tasks called by this task
+            </summary>
+        </member>
         <member name="T:Step.Interpreter.Step">
             <summary>
             Represents a step in a method
@@ -981,20 +1090,44 @@
             </summary>
             <returns>True if everything completed successfully, false if we need to backtrack</returns>
         </member>
-        <member name="M:Step.Interpreter.Step.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.Step.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Attempt to run this step.
             </summary>
             <param name="output">Output accumulated so far</param>
             <param name="e">Variable binding information to use in this step</param>
             <param name="k">Procedure to run if this step and the other steps in its chain are successful</param>
+            <param name="predecessor">Predecessor frame</param>
             <returns>True if all steps in the chain, and the continuation are all successful.  False means we're backtracking</returns>
         </member>
-        <member name="M:Step.Interpreter.Step.Continue(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.Step.Continue(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Run any remaining steps in the chain, otherwise run the continuation.
             </summary>
             <returns>True if all steps in the chain, and the continuation are all successful.  False means we're backtracking</returns>
+        </member>
+        <member name="F:Step.Interpreter.Step.EmptyCalleeList">
+            <summary>
+            An empty callee list for use in Callees
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Step.Callees">
+            <summary>
+            The callees of just this step, if any
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Step.ChainSteps">
+            <summary>
+            All the steps in the chain starting with this step
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Step.CalleesOfChain">
+            <summary>
+            All the callees of all the calls in this chain
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.BranchStep.Callees">
+            <inheritdoc />
         </member>
         <member name="T:Step.State">
             <summary>
@@ -1045,6 +1178,16 @@
             Make a randomly permuted copy of sequence
             </summary>
         </member>
+        <member name="T:Step.Utilities.Writer">
+            <summary>
+            Formatted writting of Step terms (i.e. tuples, variables, and atomic values)
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Writer.TermToString(System.Object,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
+            <summary>
+            Convert a Step term to a string as it would appear in the source code.
+            </summary>
+        </member>
         <member name="T:Step.Module">
             <summary>
             Stores values of global state variables
@@ -1086,6 +1229,11 @@
         <member name="F:Step.Module.Name">
             <summary>
             Name of the module for debugging purposes
+            </summary>
+        </member>
+        <member name="F:Step.Module.SourceExtension">
+            <summary>
+            Extension used for source files
             </summary>
         </member>
         <member name="M:Step.Module.#ctor(System.String)">
@@ -1132,6 +1280,16 @@
             True if this module has its own definition of the specified variable
             </summary>
         </member>
+        <member name="P:Step.Module.Bindings">
+            <summary>
+            All the variable bindings in this module.
+            </summary>
+        </member>
+        <member name="P:Step.Module.DefinedTasks">
+            <summary>
+            All CompoundTasks defined in this Module
+            </summary>
+        </member>
         <member name="M:Step.Module.FindTask(Step.StateVariableName,System.Int32,System.Boolean,System.String,System.Int32)">
             <summary>
             Find the CompoundTask named by the specified variable, creating one if necessary.
@@ -1170,6 +1328,14 @@
             <param name="taskName">Name of the task</param>
             <param name="args">Arguments to task, if any</param>
         </member>
+        <member name="M:Step.Module.CallPredicate(System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments as a predicate and returns true if it succeeds
+            This call will fail if the task attempts to generate output.
+            </summary>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+        </member>
         <member name="M:Step.Module.CallFunction``1(Step.State,System.String,System.Object[])">
             <summary>
             Calls the named task with the specified arguments as a function and returns the value of its last argument
@@ -1178,6 +1344,13 @@
             <param name="state">Global variable bindings to use in the call, if any.</param>
             <param name="taskName">Name of the task</param>
             <param name="args">Arguments to task, if any</param>
+        </member>
+        <member name="M:Step.Module.LoadDirectory(System.String,System.Boolean)">
+            <summary>
+            Load all source files in the specified directory
+            </summary>
+            <param name="path">Path for the directory</param>
+            <param name="recursive">If true, load files from all directories in the subtree under path</param>
         </member>
         <member name="M:Step.Module.LoadDefinitions(System.String)">
             <summary>
@@ -1219,6 +1392,13 @@
             Returns any warnings found by code analysis
             </summary>
         </member>
+        <member name="M:Step.Module.TaskCalls(Step.Interpreter.CompoundTask,System.Object)">
+            <summary>
+            True if caller has a method that calls callee
+            </summary>
+            <param name="caller">Caller (but be a CompoundTask)</param>
+            <param name="callee">Target of call (can be a CompoundTask or a primitive task, i.e. a delegate)</param>
+        </member>
         <member name="P:Step.Module.StackTrace">
             <summary>
             Return a trace of the method calls from the current frame.
@@ -1234,6 +1414,26 @@
             <summary>
             An event handler to be called on every method call.
             Used to implement single-stepping in a debugger
+            </summary>
+        </member>
+        <member name="T:Step.Module.MethodTraceEvent">
+            <summary>
+            Which event is being traced (a call, success, or failure)
+            </summary>
+        </member>
+        <member name="F:Step.Module.MethodTraceEvent.Enter">
+            <summary>
+            The arguments have been matched to the head of this method and we will now try running its body
+            </summary>
+        </member>
+        <member name="F:Step.Module.MethodTraceEvent.Succeed">
+            <summary>
+            The method succeeded
+            </summary>
+        </member>
+        <member name="F:Step.Module.MethodTraceEvent.Fail">
+            <summary>
+            The method failed
             </summary>
         </member>
         <member name="T:Step.StateVariableName">
@@ -1339,6 +1539,16 @@
         <member name="M:Step.Parser.DefinitionStream.IsNonAnonymousLocalVariableName(System.Object)">
             <summary>
             The token is a valid name of a non-anonymous local variable
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.IsSingletonVariableName(System.String)">
+            <summary>
+            The local variable name indicates the programmer intended it to be a singleton.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.DefinitionStream.IsIntendedAsSingleton(Step.Interpreter.LocalVariableName)">
+            <summary>
+            The local variable name indicates the programmer intended it to be a singleton.
             </summary>
         </member>
         <member name="M:Step.Parser.DefinitionStream.IsGlobalVariableName(System.Object)">

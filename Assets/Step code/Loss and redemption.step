@@ -1,6 +1,0 @@
-LossAndRedemptionStory ?protagonist ?other ?relationship:
-   [IntroduceRelationship ?protagonist ?other ?relationship]
-   [BreakRelationship ?protagonist ?other ?relationship]
-   [RestoreRelationship ?protagonist ?other ?relationship]
-   [LossAndRedemptionCoda ?protagonist ?other ?relationship]
-[end]

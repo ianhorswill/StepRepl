@@ -1,9 +1,0 @@
-Gives ?giver ?recipient ?item: ?giver gives ?item to ?recipient.  [Beat]
-
-Meet ?a ?b ?setting:
-    [Setting ?setting]
-    ?a meets ?b
-    [Beat]
-[end]
-
-TimePasses: Time passes ... [Beat]

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Step;
+using Step.Interpreter;
 
 public class StepTask
 {
@@ -14,14 +15,18 @@ public class StepTask
     public State State { get; set; }
     public Exception Exception { get; private set; }
 
+    public Module.MethodTraceEvent TraceEvent { get; private set; }
+
     public bool Completed => ThreadState == ThreadState.Stopped;
     public bool Paused => ThreadState == ThreadState.Suspended;
     
-    public bool Aborted => ThreadState == ThreadState.Aborted;
-
     public bool Active => ThreadState == ThreadState.Running || ThreadState == ThreadState.Suspended;
 
     public bool ShowStackRequested;
+
+    public bool NewSample;
+
+    public string BreakMessage;
 
     public bool SingleStep
     {
@@ -50,7 +55,7 @@ public class StepTask
                 Exception = e;
                 Text = null;
             }
-        });
+        }, 4000000);
         thread.Start();
     }
 
@@ -61,7 +66,11 @@ public class StepTask
 #pragma warning restore CS0618 // Type or member is obsolete
     }
     
-    public void SingleStepTraceHandler() {
+    public void SingleStepTraceHandler(Step.Module.MethodTraceEvent e, Method method, object[] args, PartialOutput output, BindingEnvironment env)
+    {
+        TraceEvent = e;
+        Text = output.AsString;
+        State = env.State;
         Pause(true);
     }
 

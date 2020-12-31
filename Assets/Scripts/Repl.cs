@@ -7,79 +7,154 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using JetBrains.Annotations;
+using Step.Interpreter;
 using static Step.Interpreter.PrimitiveTask;
 using TMPro;
 
+[UsedImplicitly]
 public class Repl
     : MonoBehaviour
 {
     public Module StepCode;
     public StepTask CurrentTask;
 
-    public TMP_Text Text;
+    public TMP_InputField OutputText;
     public TMP_InputField Command;
-    public string lastCommand = "";
+    public TMP_InputField DebugOutput;
 
-    public Module ReplUtilities = null;
+    private string lastCommand = "";
+
+    public Module ReplUtilities;
 
     // Start is called before the first frame update
+    [UsedImplicitly]
     void Start()
     {
+        Application.quitting += AbortCurrentTask;
+        
         Module.RichTextStackTraces = true;
         
         ReplUtilities = new Module("Repl utilities", Module.Global)
         {
-            ["Pause"] = NamePrimitive("Pause", (MetaTask) ((args, o, bindings, k) =>
+            ["SampleOutputText"] = NamePrimitive("SampleOutputText",
+                (MetaTask)((args, o, bindings, k, p) =>
+                {
+                    ArgumentCountException.Check("SampleOutputText", 0, args);
+                    var t = StepTask.CurrentStepTask;
+                    // Don't generate another sample if the last one hasn't been displayed yet.
+                    if (!t.NewSample)
+                    {
+                        t.Text = o.AsString;
+                        t.State = bindings.State;
+                        t.NewSample = true;
+                    }
+
+                    return k(o, bindings.Unifications, bindings.State, p);
+                })),
+            
+            ["EmptyCallSummary"] = GeneralRelation("EmptyCallSummary",
+                _ => false,
+                () => new [] { new Dictionary<CompoundTask, int>() }
+                    ),
+            
+            ["NoteCalledTasks"] = NamePrimitive("NoteCalledTasks", 
+                    (Predicate1) ((arg) =>
+                    {
+                        var callSummary = (Dictionary<CompoundTask, int>) arg;
+                        foreach (var frame in MethodCallFrame.CurrentFrame.GoalChain)
+                        {
+                            var task = frame.Method.Task;
+                            callSummary.TryGetValue(task, out var previousCount);
+                            callSummary[task] = previousCount + 1;
+                        }
+                        return true;
+                    })),
+
+            ["Pause"] = NamePrimitive("Pause", (MetaTask) ((args, o, bindings, k, p) =>
             {
+                ArgumentCountException.Check("Pause", 0, args);
                 var t = StepTask.CurrentStepTask;
                 t.Text = o.AsString;
                 t.State = bindings.State;
                 t.Pause(t.SingleStep);
-                return k(o, bindings.Unifications, bindings.State);
+                return k(o, bindings.Unifications, bindings.State, p);
             })),
-            ["Break"] = NamePrimitive("Break", (MetaTask)((args, o, bindings, k) =>
+            
+            ["Break"] = NamePrimitive("Break", (MetaTask)((args, o, bindings, k, p) =>
             {
                 var t = StepTask.CurrentStepTask;
+                if (args.Length > 0)
+                    t.BreakMessage = ((string[])args[0]).Untokenize();
                 t.Text = o.AsString;
                 t.State = bindings.State;
                 t.Pause(true);
-                return k(o, bindings.Unifications, bindings.State);
+                t.BreakMessage = null;
+                return k(o, bindings.Unifications, bindings.State, p);
             }))
         };
+        
+        ReplUtilities.AddDefinitions(
+            "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
+            "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
+            "Sample ?task ?sampleCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] [Not [Not [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText]]] [= ?attempt 100]",
+            "CallCounts ?task ?subTaskPredicate: [Sample ?task 100 ?s]  [ForEach [?subTaskPredicate ?t] [Write ?t] [?s ?t ?value] [Write ?value] [Write \"<br>\"]]",
+            "Uncalled ?task ?subTaskPredicate: [Sample ?task 100 ?s]  [ForEach [?subTaskPredicate ?t] [Not [?s ?t ?value]] [Write ?t] [Write \"<br>\"]]");
 
         ReloadStepCode();
     }
 
     private void ReloadStepCode()
     {
-        var sourceDirectory = Path.Combine(Application.dataPath, "Step code");
-        var sourceFiles = Directory.GetFiles(sourceDirectory).Where(f => Path.GetExtension(f) == ".step").ToArray();
+        var sourceDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step");
+
         try
         {
-            StepCode = new Module("main", ReplUtilities, sourceFiles);
-            Text.text = "<color=yellow>"+string.Join("\n", StepCode.Warnings())+"</color>";
+            StepCode = new Module("main", ReplUtilities);
+            StepCode.LoadDirectory(sourceDirectory, true);
+            // This is just to make sure the system sees HotKey as being a main routine.
+            StepCode.AddDefinitions("[main] HotKey ?: [Fail]");
+            var warnings = StepCode.Warnings().ToArray();
+            DebugOutput.text = warnings.Length == 0 ? ""
+                : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
         }
         catch (Exception e)
         {
-            Text.text = $"<color=red>{e.Message}</color>";
+            DebugOutput.text = $"<color=red>{e.Message}</color>";
         }
 
         Command.Select();
     }
 
+    [UsedImplicitly]
     public void RunUserCommand()
     {
         AbortCurrentTask();
+        DebugOutput.text = "";
         var commandText = Command.text.Trim();
         var command = commandText == "" ? lastCommand : commandText;
         lastCommand = command;
-        if (command == "")
-            Command.Select();
-        else
+        switch (command)
         {
-            if (!command.StartsWith("["))
-                command = $"[{command}]";
-            StartCoroutine(RunStepCommand(command));
+            case "":
+                Command.Select();
+                break;
+
+            case "reload":
+                ReloadStepCode();
+                OutputText.text = "";
+                DebugOutput.text = "Files reloaded\n\n"+DebugOutput.text;
+                Command.Select();
+                Command.text = "";
+                break;
+            
+            default:
+            {
+                if (!command.StartsWith("["))
+                    command = $"[{command}]";
+                StartCoroutine(RunStepCommand(command));
+                break;
+            }
         }
     }
 
@@ -95,19 +170,30 @@ public class Repl
                 // Otherwise we're just recomputing the same data.
                 if (!previouslyPaused)
                 {
-                    var t = new StringBuilder();
-                    t.Append("<size=20>");
-                    for (var b = Step.Interpreter.MethodCallFrame.CurrentFrame.BindingsAtCallTime; b != null; b = b.Next)
-                        t.AppendFormat("{0} -> {1}  //  ", b.Variable.DebuggerName, b.Value);
-                    t.Append("</size>");
-                    if (task.ShowStackRequested)
-                    {
-                        t.Append("<color=orange><size=24>");
-                        t.Append(Module.StackTrace);
-                        t.Append("</size></color>\n");
-                    }
-                    t.Append(task.Text ?? "");
-                    Text.text = t.ToString();
+                    //t.Append("<size=20>");
+                    //for (var b = Step.Interpreter.MethodCallFrame.CurrentFrame.BindingsAtCallTime; b != null; b = b.Next)
+                    //    t.AppendFormat("{0} -> {1}  //  ", b.Variable.DebuggerName, b.Value);
+                    //t.Append("</size>");
+                    var breakMessage =
+                        task.BreakMessage!=null ? $"<color=red><b>{task.BreakMessage}</b></color>\n\n" : "";
+                    if (breakMessage == "")
+                        switch (task.TraceEvent)
+                        {
+                            case Module.MethodTraceEvent.Enter:
+                                breakMessage = $"<color=white>Enter method:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                break;
+
+                            case Module.MethodTraceEvent.Succeed:
+                                breakMessage = $"<color=green>Method succeeded:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                break;
+
+                            case Module.MethodTraceEvent.Fail:
+                                breakMessage = $"<color=red>Method failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                break;
+                        }
+                    DebugOutput.text = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
+
+                    OutputText.text = task.Text ?? "";
                     previouslyPaused = true;
                 }
 
@@ -118,18 +204,25 @@ public class Repl
                     previouslyPaused = false;
                 }
             }
+            else if (task.NewSample)
+            {
+                OutputText.text = task.Text;
+                task.NewSample = false;
+            }
 
             yield return null;
         }
         
         if (task.Exception == null)
         {
-            Text.text = task.Text;
+            OutputText.text = task.Text;
+            DebugOutput.text = "";
             Command.SetTextWithoutNotify("");
         }
         else
         {
-            Text.text = $"<color=red>{task.Exception.Message}</color>\n\n<color=orange>{Module.StackTrace}</color>";
+            var exceptionMessage = (task.Exception is ThreadAbortException )? "Aborted" : task.Exception.Message;
+            DebugOutput.text = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
         }
         Command.Select();
     }
@@ -142,8 +235,65 @@ public class Repl
         CurrentTask = null;
     }
 
+    void ShowState()
+    {
+        if (CurrentTask != null)
+        {
+            var b = new StringBuilder();
+            var gotOne = false;
+            foreach (var pair in CurrentTask.State.Contents)
+            {
+                gotOne = true;
+                b.AppendFormat("<b>{0}</b>: {1}\n\n", pair.Key, Step.Utilities.Writer.TermToString(pair.Value));
+            }
+
+            if (!gotOne)
+                b.Append("State variables all have their default values");
+            DebugOutput.text = b.ToString();
+        }
+    }
+
+    [UsedImplicitly]
     void Update()
     {
-        Thread.Sleep(20);
+        Thread.Sleep(50);
+    }
+
+    [UsedImplicitly]
+    void OnGUI()
+    {
+        var e = Event.current;
+        if (e.type == EventType.KeyDown)
+        {
+            var keyCode = e.keyCode;
+            switch (keyCode)
+            {
+                case KeyCode.Escape:
+                case KeyCode.Break:
+                    AbortCurrentTask();
+                    break;
+
+                case KeyCode.R:
+                    if (e.control)
+                    {
+                        AbortCurrentTask();
+                        ReloadStepCode();
+                        OutputText.text = "";
+                        DebugOutput.text = "Files reloaded\n\n" + DebugOutput.text;
+                        Command.Select();
+                    }
+
+                    break;
+
+                case KeyCode.F4:
+                    ShowState();
+                    break;
+
+                default:
+                    if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
+                        StartCoroutine(RunStepCommand($"[HotKey {keyCode.ToString().ToLowerInvariant()}]"));
+                    break;
+            }
+        }
     }
 }

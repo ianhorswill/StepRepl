@@ -16,6 +16,18 @@ using TMPro;
 public class Repl
     : MonoBehaviour
 {
+    private string[] SearchPath = new[]
+    {
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GitHub")
+    };
+    
+    public string ProjectPath
+    {
+        get => PlayerPrefs.GetString("CurrentProject", null);
+        set => PlayerPrefs.SetString("CurrentProject", value);
+    }
+    
     public Module StepCode;
     public StepTask CurrentTask;
 
@@ -109,19 +121,26 @@ public class Repl
 
     private void ReloadStepCode()
     {
-        var sourceDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step");
-
         try
         {
-            StepCode = new Module("main", ReplUtilities);
-            StepCode.FormattingOptions.ParagraphMarker = "\n\n";
-            StepCode.FormattingOptions.LineSeparator = "<br>";
-            StepCode.LoadDirectory(sourceDirectory, true);
-            // This is just to make sure the system sees HotKey as being a main routine.
-            StepCode.AddDefinitions("[main] HotKey ?: [Fail]");
-            var warnings = StepCode.Warnings().ToArray();
-            DebugOutput.text = warnings.Length == 0 ? ""
-                : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
+            StepCode = new Module("main", ReplUtilities)
+            {
+                FormattingOptions = {ParagraphMarker = "\n\n", LineSeparator = "<br>"}
+            };
+
+            if (string.IsNullOrEmpty(ProjectPath))
+                DebugOutput.text =
+                    "<color=red>No project selected.  Use \"project <i>projectName</i>\" to select your project directory.</color>";
+            else
+            {
+                StepCode.LoadDirectory(ProjectPath, true);
+                // This is just to make sure the system sees HotKey as being a main routine.
+                StepCode.AddDefinitions("[main] HotKey ?: [Fail]");
+                var warnings = StepCode.Warnings().ToArray();
+                DebugOutput.text = warnings.Length == 0
+                    ? ""
+                    : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
+            }
         }
         catch (Exception e)
         {
@@ -129,6 +148,18 @@ public class Repl
         }
 
         Command.Select();
+    }
+
+    public string FindProject(string projectName)
+    {
+        foreach (var collection in SearchPath)
+        {
+            var dir = Path.Combine(collection, projectName);
+            if (Directory.Exists(dir))
+                return dir;
+        }
+
+        return null;
     }
 
     [UsedImplicitly]
@@ -139,28 +170,46 @@ public class Repl
         var commandText = Command.text.Trim();
         var command = commandText == "" ? lastCommand : commandText;
         lastCommand = command;
-        switch (command)
+        
+        if (command.StartsWith("project "))
         {
-            case "":
-                Command.Select();
-                break;
-
-            case "reload":
-                ReloadStepCode();
-                OutputText.text = "";
-                DebugOutput.text = "Files reloaded\n\n"+DebugOutput.text;
-                Command.Select();
-                Command.text = "";
-                break;
-            
-            default:
+            var projectName = command.Substring(command.IndexOf(' ')).Trim();
+            var path = FindProject(projectName);
+            if (path == null)
             {
-                if (!command.StartsWith("["))
-                    command = $"[{command}]";
-                StartCoroutine(RunStepCommand(command));
-                break;
+                DebugOutput.text = $"<color=red>Can't find a project named {projectName}.</color>";
+                return;
             }
+
+            ProjectPath = path;
+            ReloadStepCode();
+            Command.text = "";
+            Command.Select();
+            
         }
+        else
+            switch (command)
+            {
+                case "":
+                    Command.Select();
+                    break;
+
+                case "reload":
+                    ReloadStepCode();
+                    OutputText.text = "";
+                    DebugOutput.text = "Files reloaded\n\n"+DebugOutput.text;
+                    Command.Select();
+                    Command.text = "";
+                    break;
+            
+                default:
+                {
+                    if (!command.StartsWith("["))
+                        command = $"[{command}]";
+                    StartCoroutine(RunStepCommand(command));
+                    break;
+                }
+            }
     }
 
     private IEnumerator RunStepCommand(string code)

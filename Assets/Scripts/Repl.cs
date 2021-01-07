@@ -59,16 +59,19 @@ public class Repl
                     ),
             
             ["NoteCalledTasks"] = NamePrimitive("NoteCalledTasks", 
-                    (Predicate1) ((arg) =>
+                    (MetaTask) ((args, output, env, k, predecessor) =>
                     {
-                        var callSummary = (Dictionary<CompoundTask, int>) arg;
-                        foreach (var frame in MethodCallFrame.CurrentFrame.GoalChain)
+                        ArgumentCountException.Check("NoteCalledTasks", 1, args);
+                        var callSummary =
+                            ArgumentTypeException.Cast<Dictionary<CompoundTask, int>>("NoteCalledTasks", args[0], args);
+                        foreach (var frame in predecessor.GoalChain)
                         {
                             var task = frame.Method.Task;
                             callSummary.TryGetValue(task, out var previousCount);
                             callSummary[task] = previousCount + 1;
                         }
-                        return true;
+
+                        return k(output, env.Unifications, env.State, predecessor);
                     })),
 
             ["Pause"] = NamePrimitive("Pause", (MetaTask) ((args, o, bindings, k, p) =>
@@ -96,10 +99,10 @@ public class Repl
         
         ReplUtilities.AddDefinitions(
             "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
+            "Sample ?task ?testCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText] [= ?attempt ?testCount]",
             "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
-            "Sample ?task ?sampleCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] [Not [Not [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText]]] [= ?attempt 100]",
-            "CallCounts ?task ?subTaskPredicate: [Sample ?task 100 ?s]  [ForEach [?subTaskPredicate ?t] [Write ?t] [?s ?t ?value] [Write ?value] [Write \"<br>\"]]",
-            "Uncalled ?task ?subTaskPredicate: [Sample ?task 100 ?s]  [ForEach [?subTaskPredicate ?t] [Not [?s ?t ?value]] [Write ?t] [Write \"<br>\"]]");
+            "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [?s ?t ?value] [Write ?value] [NewLine]]",
+            "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]");
 
         ReloadStepCode();
     }
@@ -111,6 +114,8 @@ public class Repl
         try
         {
             StepCode = new Module("main", ReplUtilities);
+            StepCode.FormattingOptions.ParagraphMarker = "\n\n";
+            StepCode.FormattingOptions.LineSeparator = "<br>";
             StepCode.LoadDirectory(sourceDirectory, true);
             // This is just to make sure the system sees HotKey as being a main routine.
             StepCode.AddDefinitions("[main] HotKey ?: [Fail]");
@@ -187,8 +192,12 @@ public class Repl
                                 breakMessage = $"<color=green>Method succeeded:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
                                 break;
 
-                            case Module.MethodTraceEvent.Fail:
+                            case Module.MethodTraceEvent.MethodFail:
                                 breakMessage = $"<color=red>Method failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                break;
+
+                            case Module.MethodTraceEvent.CallFail:
+                                breakMessage = $"<color=red>Call failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
                                 break;
                         }
                     DebugOutput.text = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
@@ -197,9 +206,10 @@ public class Repl
                     previouslyPaused = true;
                 }
 
-                if (Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.F5))
+                if (Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.F5))
                 {
-                    task.SingleStep = Input.GetKeyDown(KeyCode.F10);
+                    task.StepOverFrame = (Input.GetKeyDown(KeyCode.F10) && task.TraceEvent != Module.MethodTraceEvent.Succeed) ? MethodCallFrame.CurrentFrame.Caller : null;
+                    task.SingleStep = Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.F11);
                     task.Continue();
                     previouslyPaused = false;
                 }

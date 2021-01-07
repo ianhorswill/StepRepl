@@ -38,6 +38,8 @@ public class StepTask
         }
     }
 
+    public MethodCallFrame StepOverFrame;
+
     public StepTask(Module m, bool singleStep, string code)
     {
         Module = m;
@@ -68,10 +70,13 @@ public class StepTask
     
     public void SingleStepTraceHandler(Step.Module.MethodTraceEvent e, Method method, object[] args, PartialOutput output, BindingEnvironment env)
     {
-        TraceEvent = e;
-        Text = output.AsString;
-        State = env.State;
-        Pause(true);
+        if (StepOverFrame == null || (StepOverFrame == MethodCallFrame.CurrentFrame.Caller && (e == Module.MethodTraceEvent.Succeed || e == Module.MethodTraceEvent.CallFail)))
+        {
+            TraceEvent = e;
+            Text = output.AsString;
+            State = env.State;
+            Pause(true);
+        }
     }
 
     public void Pause(bool showStack = false)

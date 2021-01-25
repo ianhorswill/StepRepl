@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using Step.Interpreter;
+using Step.Utilities;
 using static Step.Interpreter.PrimitiveTask;
 using TMPro;
 
@@ -18,7 +19,14 @@ public class Repl
 {
     private string[] SearchPath = new[]
     {
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step"),
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR_WIN
+        // This turns out to be a documented Mono issue.
+        // See https://xamarin.github.io/bugzilla-archives/41/41258/bug.html
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+"/Documents", "Imaginarium")
+#else
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Imaginarium")
+#endif
+        ,
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GitHub")
     };
     
@@ -49,6 +57,24 @@ public class Repl
         
         ReplUtilities = new Module("Repl utilities", Module.Global)
         {
+            ["PrintLocalBindings"] = NamePrimitive("PrintLocalBindings",
+                (MetaTask)((args, o, bindings, k, p) =>
+                {
+                    ArgumentCountException.Check("PrintLocalBindings", 0, args);
+                    var locals = bindings.Frame.Locals;
+                    var output = new string[locals.Length * 4];
+                    var index = 0;
+                    foreach (var v in locals)
+                    {
+                        output[index++] = v.Name.Name;
+                        output[index++] = "=";
+                        output[index++] = Writer.TermToString(bindings.Resolve(v, bindings.Unifications));
+                        output[index++] = TextUtilities.NewLineToken;
+                    }
+
+                    return k(o.Append(output), bindings.Unifications, bindings.State, p);
+                })),
+            
             ["SampleOutputText"] = NamePrimitive("SampleOutputText",
                 (MetaTask)((args, o, bindings, k, p) =>
                 {
@@ -110,11 +136,20 @@ public class Repl
         };
         
         ReplUtilities.AddDefinitions(
+            "predicate TestCase ?code.",
+            "RunTestCases: [ForEach [TestCase ?call] [RunTestCase ?call]] All tests passed!",
+            "RunTestCase ?call: Running ?call ... [Paragraph] [SampleOutputText] [Call ?call] [SampleOutputText]",
             "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
             "Sample ?task ?testCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText] [= ?attempt ?testCount]",
             "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
-            "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [?s ?t ?value] [Write ?value] [NewLine]]",
-            "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]");
+            "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Write \"<pos=400>\"] [DisplayCallCount ?s ?t ?count] [NewLine]]",
+            "DisplayCallCount ?s ?t ?count: [?s ?t ?value] [set ?average = ?value/?count] [Write ?average]",
+            "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]",
+            "predicate HotKey ?key ?doc ?implementation.",
+            "RunHotKey ?key: [HotKey ?key ? ?code] [Call ?code]",
+            "ShowHotKeys: <b>Key <indent=100> Function </indent></b> [NewLine] [ForEach [HotKey ?key ?doc ?] [WriteHotKeyDocs ?key ?doc]]",
+            "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]"
+            );
 
         ReloadStepCode();
     }
@@ -123,6 +158,13 @@ public class Repl
     {
         try
         {
+            if (ReplUtilities["HotKey"] is CompoundTask hotKey)
+            {
+                hotKey.Methods.Clear();
+                // Make sure it gets executed as a predicate
+                hotKey.Declare(CompoundTask.TaskFlags.Fallible | CompoundTask.TaskFlags.MultipleSolutions);
+            }
+            
             StepCode = new Module("main", ReplUtilities)
             {
                 FormattingOptions = {ParagraphMarker = "\n\n", LineSeparator = "<br>"}
@@ -134,12 +176,17 @@ public class Repl
             else
             {
                 StepCode.LoadDirectory(ProjectPath, true);
-                // This is just to make sure the system sees HotKey as being a main routine.
-                StepCode.AddDefinitions("[main] HotKey ?: [Fail]");
+                DeclareMainIfDefined("HotKey", "Author", "Description");
                 var warnings = StepCode.Warnings().ToArray();
                 DebugOutput.text = warnings.Length == 0
                     ? ""
                     : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
+                var description = StepCode.Defines("Description") ? StepCode.Call("Description") : "";
+                var author = StepCode.Defines("Author") ? $"\nAuthor: {StepCode.Call("Author")}":"";
+                var keys = "";
+                if (ReplUtilities["HotKey"] is CompoundTask hot && hot.Methods.Count > 0)
+                    keys = StepCode.Call("ShowHotKeys");
+                OutputText.text = $"Project: <b>{Path.GetFileName(ProjectPath)}</b>{author}\n\n{description}\n\n{keys}";
             }
         }
         catch (Exception e)
@@ -147,7 +194,17 @@ public class Repl
             DebugOutput.text = $"<color=red>{e.Message}</color>";
         }
 
-        Command.Select();
+        //Command.Select();
+    }
+
+    private void DeclareMainIfDefined(params string[] tasks)
+    {
+        foreach (var taskName in tasks)
+            if (StepCode.Defines(taskName))
+            {
+                if (StepCode[taskName] is CompoundTask task) 
+                    task.Declare(CompoundTask.TaskFlags.Main);
+            }
     }
 
     public string FindProject(string projectName)
@@ -168,6 +225,7 @@ public class Repl
         AbortCurrentTask();
         DebugOutput.text = "";
         var commandText = Command.text.Trim();
+        commandText = commandText.Replace("<b>", "").Replace("</b>", "");
         var command = commandText == "" ? lastCommand : commandText;
         lastCommand = command;
         
@@ -184,21 +242,21 @@ public class Repl
             ProjectPath = path;
             ReloadStepCode();
             Command.text = "";
-            Command.Select();
+            //Command.Select();
             
         }
         else
             switch (command)
             {
                 case "":
-                    Command.Select();
+                    //Command.Select();
                     break;
 
                 case "reload":
                     ReloadStepCode();
                     OutputText.text = "";
                     DebugOutput.text = "Files reloaded\n\n"+DebugOutput.text;
-                    Command.Select();
+                    //Command.Select();
                     Command.text = "";
                     break;
             
@@ -206,6 +264,10 @@ public class Repl
                 {
                     if (!command.StartsWith("["))
                         command = $"[{command}]";
+                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                        command = $"[Test {command} 10000]";
+
+                    command += "[PrintLocalBindings]";
                     StartCoroutine(RunStepCommand(command));
                     break;
                 }
@@ -283,7 +345,7 @@ public class Repl
             var exceptionMessage = (task.Exception is ThreadAbortException )? "Aborted" : task.Exception.Message;
             DebugOutput.text = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
         }
-        Command.Select();
+        //Command.Select();
     }
 
     void AbortCurrentTask()
@@ -337,9 +399,8 @@ public class Repl
                     {
                         AbortCurrentTask();
                         ReloadStepCode();
-                        OutputText.text = "";
                         DebugOutput.text = "Files reloaded\n\n" + DebugOutput.text;
-                        Command.Select();
+                        //Command.Select();
                     }
 
                     break;
@@ -350,7 +411,7 @@ public class Repl
 
                 default:
                     if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
-                        StartCoroutine(RunStepCommand($"[HotKey {keyCode.ToString().ToLowerInvariant()}]"));
+                        StartCoroutine(RunStepCommand($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]"));
                     break;
             }
         }

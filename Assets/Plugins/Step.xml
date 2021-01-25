@@ -117,6 +117,25 @@
             Make a new FormattingOptions object
             </summary>
         </member>
+        <member name="T:Step.Interpreter.FunctionalExpressionParser">
+            <summary>
+            Parser for arithmetic/functional expressions used in set commands.
+            TODO: handle right-associative binary operators
+            TODO: handle suffix unary operators
+            TODO: assumes unary operators are always higher precedence than binary operators, so handle unary operators of lower 
+            TODO: handle non-operator functions
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.FunctionalExpressionParser.Parse(System.Object[],System.Int32,System.String,System.Int32)">
+            <summary>
+            The actual parser.  This takes an array of tokens and returns a FunctionalExpression
+            </summary>
+            <param name="tokens">Tokens comprising the functional expression</param>
+            <param name="start">Index of the start of the functional expression within the tokens</param>
+            <param name="path">Source file this comes from</param>
+            <param name="lineNumber">line within the source file</param>
+            <returns>The FunctionalExpression denoted by the tokens</returns>
+        </member>
         <member name="T:Step.Interpreter.SequenceStep">
             <summary>
             Implements a sequence in which each successive call invokes the next branch
@@ -133,7 +152,7 @@
             Makes a step that first calls the first branch, then on successive calls, invokes successive branches.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.SequenceStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.SequenceStep.Try(Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Run the next branch, or fail if we've run out of branches
             </summary>
@@ -245,6 +264,11 @@
         <member name="F:Step.Interpreter.BindingEnvironment.Module">
             <summary>
             Module containing bindings of GlobalVariables
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.BindingEnvironment.Frame">
+            <summary>
+            MethodCallFrame of this environment
             </summary>
         </member>
         <member name="P:Step.Interpreter.BindingEnvironment.Local">
@@ -492,7 +516,7 @@
         <member name="P:Step.Interpreter.Call.Callees">
             <inheritdoc />
         </member>
-        <member name="M:Step.Interpreter.Call.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.Call.Try(Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Attempt to run this task
             </summary>
@@ -552,7 +576,7 @@
             Fixed sequence of tokens to output when this step is performed
             </summary>
         </member>
-        <member name="M:Step.Interpreter.EmitStep.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.EmitStep.Try(Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Output Text and succeed.
             </summary>
@@ -567,7 +591,7 @@
             Implementations of higher-order builtin primitives.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.MaxMinDriver(System.String,System.Object[],System.Int32,Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.MaxMinDriver(System.String,System.Object[],System.Int32,Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Core implementation of both Max and Min
             </summary>
@@ -578,29 +602,29 @@
             Used for all-solutions and maximization meta-predicates
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutions(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Calls a task with the specified arguments and allows the user to provide their own continuation.
             The only (?) use case for this is when you want to forcibly generate multiple solutions
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified task and arguments.  Return a list of the arglists for each solution.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified task and arguments.  Return a list of the text outputs of each solution.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutionsFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.GenerateSolutionsFromBody(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Calls all the tasks in the body and allows the user to provide their own continuation.
             The only (?) use case for this is when you want to forcibly generate multiple solutions
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionTextFromBody(System.String,System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionTextFromBody(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified sequence of calls.  Return a list of the text outputs of each solution.
             </summary>
@@ -645,7 +669,7 @@
             The relative probability of this method being tried first
             </summary>
         </member>
-        <member name="M:Step.Interpreter.Method.Try(System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.Method.Try(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
             <summary>
             Attempt to run this method
             </summary>
@@ -821,7 +845,7 @@
         <member name="M:Step.Interpreter.LogicVariable.ToString">
             <inheritdoc />
         </member>
-        <member name="T:Step.Interpreter.PartialOutput">
+        <member name="T:Step.Interpreter.TextBuffer">
             <summary>
             Tracks the output buffer and state of the text generated by a task.
             The buffer is writable but the PartialOutput object is read-only.
@@ -830,34 +854,46 @@
             The read-only-ness is to make backtracking easy.
             </summary>
         </member>
-        <member name="F:Step.Interpreter.PartialOutput.Buffer">
+        <member name="F:Step.Interpreter.TextBuffer.Buffer">
             <summary>
             Fixed buffer in which to hold the output
             </summary>
         </member>
-        <member name="F:Step.Interpreter.PartialOutput.Length">
+        <member name="F:Step.Interpreter.TextBuffer.Length">
             <summary>
             Amount of Buffer currently in use.
             The output generated so far is in cells Buffer[0 ... Length-1]
             </summary>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.#ctor(System.Int32)">
+        <member name="F:Step.Interpreter.TextBuffer.WriteMode">
+            <summary>
+            True means this is a buffer we're writing new text into (write mode/generate mode).
+            False means it's a buffer pre-loaded with text we're matching against (read mode/parse mode).
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.TextBuffer.#ctor(System.Int32)">
             <summary>
             Make an empty PartialOutput with a new buffer.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.#ctor(System.String[])">
+        <member name="M:Step.Interpreter.TextBuffer.MakeReadModeTextBuffer(System.String[])">
+            <summary>
+            Make buffer with text to be matched by a program running in parse mode
+            </summary>
+            <param name="text">Text to be parsed</param>
+        </member>
+        <member name="M:Step.Interpreter.TextBuffer.#ctor(System.String[])">
             <summary>
             Make an empty PartialOutput that stores output in the specified buffer.
             </summary>
             <param name="buffer"></param>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.NewEmpty">
+        <member name="M:Step.Interpreter.TextBuffer.NewEmpty">
             <summary>
             Make an empty PartialOutput with a new buffer.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.Append(System.String[])">
+        <member name="M:Step.Interpreter.TextBuffer.Append(System.String[])">
             <summary>
             Add tokens to buffer and return a new PartialOutput with the updated length.
             Upon backtracking, the new PartialOutput can be thrown away and this one
@@ -866,7 +902,7 @@
             <param name="tokens">Tokens to add to output</param>
             <returns>New buffer state</returns>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.Append(System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:Step.Interpreter.TextBuffer.Append(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Add tokens to buffer and return a new PartialOutput with the updated length.
             Upon backtracking, the new PartialOutput can be thrown away and this one
@@ -875,22 +911,49 @@
             <param name="tokens">Tokens to add to output</param>
             <returns>New buffer state</returns>
         </member>
-        <member name="P:Step.Interpreter.PartialOutput.Output">
+        <member name="M:Step.Interpreter.TextBuffer.Unify(System.String[],Step.Interpreter.TextBuffer@)">
+            <summary>
+            Write tokens to buffer, if write mode, otherwise attempt to match them
+            </summary>
+            <param name="tokens">Tokens to match to buffer</param>
+            <param name="result">expanded or consumed buffer</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:Step.Interpreter.TextBuffer.NextToken(Step.Interpreter.TextBuffer@)">
+            <summary>
+            Return the next token from a read-mode buffer, or null if at the end.
+            </summary>
+            <param name="newBuffer">Resulting updated buffer state</param>
+            <returns>Next token or null if end of buffer</returns>
+            <exception cref="T:System.InvalidOperationException">If buffer is write mode</exception>
+        </member>
+        <member name="P:Step.Interpreter.TextBuffer.Output">
             <summary>
             Tokens output so far.
             </summary>
         </member>
-        <member name="P:Step.Interpreter.PartialOutput.AsString">
+        <member name="P:Step.Interpreter.TextBuffer.AsString">
             <summary>
             The text generated so far, as a single string.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.ToString">
+        <member name="P:Step.Interpreter.TextBuffer.ReadCompleted">
+            <summary>
+            True if all tokens have been read from the buffer
+            </summary>
+            <exception cref="T:System.InvalidOperationException">If the buffer isn't in read mode</exception>
+        </member>
+        <member name="M:Step.Interpreter.TextBuffer.ToString">
             <inheritdoc />
         </member>
-        <member name="M:Step.Interpreter.PartialOutput.Difference(Step.Interpreter.PartialOutput@,Step.Interpreter.PartialOutput@)">
+        <member name="M:Step.Interpreter.TextBuffer.Difference(Step.Interpreter.TextBuffer@,Step.Interpreter.TextBuffer@)">
             <summary>
             Return an array of the strings added to an output buffer between before and after
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.TextBuffer.Unappend">
+            <summary>
+            Remove and return the last token in this output
             </summary>
         </member>
         <member name="T:Step.Interpreter.PrimitiveTask">
@@ -976,6 +1039,13 @@
             <param name="e">Binding environment to use</param>
             <param name="k">Continuation to call when successful</param>
             <param name="predecessor">Frame of the call that most recently succeeded</param>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.DeterministicTextMatcher(System.String,System.Func{System.Object,System.String[]})">
+            <summary>
+            A primitive that takes one argument and either prints it to the output, or in read mode, unifies it with the next token.
+            </summary>
+            <param name="name">Name of the primitive (for use in error messages)</param>
+            <param name="renderer">Procedure to use to convert the input to one or more tokens, if necessary</param>
         </member>
         <member name="T:Step.Interpreter.PrimitiveTask.DeterministicTextGenerator0">
             <summary>
@@ -1099,6 +1169,56 @@
             Methods for accomplishing the task
             </summary>
         </member>
+        <member name="T:Step.Interpreter.CompoundTask.TaskFlags">
+            <summary>
+            Declared properties of the task
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.None">
+            <summary>
+            No properties declared
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.Shuffle">
+            <summary>
+            Shuffle methods during execution.  Corresponds to the [randomly] declaration.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.MultipleSolutions">
+            <summary>
+            Allow this task to retry during backtracking
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.Fallible">
+            <summary>
+            Don't throw an exception if this task fails
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.Main">
+            <summary>
+            This task is called form outside the Step code, so don't show a warning if it isn't called.
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.ReadCache">
+            <summary>
+            Use results stored in the cache
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.WriteCache">
+            <summary>
+            Add results to the cache
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.Suffix">
+            <summary>
+            This task is a suffix that modifies the last generated token.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.Declare(Step.Interpreter.CompoundTask.TaskFlags)">
+            <summary>
+            Programmatic interface for declaring attributes of task
+            </summary>
+        </member>
         <member name="P:Step.Interpreter.CompoundTask.Shuffle">
             <summary>
             True if the methods of the task should be tried in random order
@@ -1114,6 +1234,22 @@
             True if it's an error for this call not to succeed at least once
             </summary>
         </member>
+        <member name="P:Step.Interpreter.CompoundTask.ReadCache">
+            <summary>
+            If true, this task should check its ResultCache for saved results.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.WriteCache">
+            <summary>
+            If true, the task should write results back to the cache on successful calls
+            in which all arguments are instantiated.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.Suffix">
+            <summary>
+            This task replaces the previous token in the output
+            </summary>
+        </member>
         <member name="M:Step.Interpreter.CompoundTask.AddMethod(System.Single,System.Object[],Step.Interpreter.LocalVariableName[],Step.Interpreter.Step,Step.Interpreter.CompoundTask.TaskFlags,System.String,System.Int32)">
             <summary>
             Add a new method for achieving this task
@@ -1126,7 +1262,7 @@
             <param name="lineNumber">Line number where the method starts in the file</param>
             <param name="newFlags">Additional flags to set for the task</param>
         </member>
-        <member name="M:Step.Interpreter.CompoundTask.Call(System.Object[],Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+        <member name="M:Step.Interpreter.CompoundTask.Call(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
             <summary>
             Call this task with the specified arguments
             </summary>
@@ -1179,7 +1315,7 @@
             </summary>
             <returns>True if everything completed successfully, false if we need to backtrack</returns>
         </member>
-        <member name="M:Step.Interpreter.Step.Try(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.Step.Try(Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Attempt to run this step.
             </summary>
@@ -1189,7 +1325,7 @@
             <param name="predecessor">Predecessor frame</param>
             <returns>True if all steps in the chain, and the continuation are all successful.  False means we're backtracking</returns>
         </member>
-        <member name="M:Step.Interpreter.Step.Continue(Step.Interpreter.PartialOutput,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
+        <member name="M:Step.Interpreter.Step.Continue(Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.Step.Continuation,Step.Interpreter.MethodCallFrame)">
             <summary>
             Run any remaining steps in the chain, otherwise run the continuation.
             </summary>
@@ -1618,7 +1754,7 @@
             has no value.
             </summary>
         </member>
-        <member name="M:Step.State.TryLookup(Step.Interpreter.StateElement,System.Object@)">
+        <member name="M:Step.State.TryGetValue(Step.Interpreter.StateElement,System.Object@)">
             <summary>
             Set result to the value of e and return true, if e is bound, else return false
             </summary>
@@ -1632,6 +1768,79 @@
             <summary>
             Returns contents as a flat array, sorted.
             Not performant - just use for examining the contents in the debugger.
+            </summary>
+        </member>
+        <member name="T:Step.DictionaryStateElement`2">
+            <summary>
+            A dictionary whose contents is stored in the global State object
+            </summary>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.#ctor(System.String)">
+            <summary>
+            Make a new dictionary that lives in the global state.
+            Since it lives in the global state, different states will have
+            different sets of bindings, and making a new binding will
+            create a new global state.
+            </summary>
+            <param name="name">Name to give to the dictionary</param>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.Dictionary(Step.State)">
+            <summary>
+            The version of the dictionary stored in the specified state
+            </summary>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.ContainsKey(Step.State,`0)">
+            <summary>
+            Test if the specified Global state contains a binding within this dictionary for the specified key
+            </summary>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.TryGetValue(Step.State,`0,`1@)">
+            <summary>
+            Attempt to find the result associated with this key in the specified state object
+            </summary>
+            <param name="state">Global state object to search in</param>
+            <param name="key">Key to search for</param>
+            <param name="result">Value associated with key, if any</param>
+            <returns>True if there is a value associated with the key</returns>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.GetValueOrDefault(Step.State,`0,`1)">
+            <summary>
+            Get the value of the specified key in this dictionary for the specified state, if present.
+            Otherwise, return the specified default value.
+            </summary>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.Add(Step.State,`0,`1)">
+            <summary>
+            Associates a new value to the specified key in this dictionary, in the specified State.
+            </summary>
+            <param name="oldState">State before the modification</param>
+            <param name="key">Key to add</param>
+            <param name="value">Value to associate with key</param>
+            <returns>New global state</returns>
+        </member>
+        <member name="M:Step.DictionaryStateElement`2.Bindings(Step.State)">
+            <summary>
+            Get all the key/value bindings currently in effect for this dictionary in the specified state.
+            </summary>
+        </member>
+        <member name="T:Step.Term">
+            <summary>
+            Methods related to testing data-values in logic-specific ways
+            Term is the word used in logic for something that can be an argument to a predicate.
+            </summary>
+        </member>
+        <member name="M:Step.Term.IsGround(System.Object[])">
+            <summary>
+            True if the tuple contains no variables.
+            This assumes that the value has already been resolved relative to an environment
+            so any logic variables are uninstantiated.
+            </summary>
+        </member>
+        <member name="M:Step.Term.IsGround(System.Object)">
+            <summary>
+            True if object is *not* a logic variable or array containing a logic variable.
+            This assumes that the value has already been resolved relative to an environment
+            so any logic variables are uninstantiated.
             </summary>
         </member>
         <member name="M:Step.Utilities.Randomizer.Shuffle``1(System.Collections.Generic.IList{``0})">
@@ -1818,6 +2027,14 @@
             <param name="taskName">Name of the task</param>
             <param name="args">Arguments to task, if any</param>
         </member>
+        <member name="M:Step.Module.CallFunction``1(System.String,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments as a function and returns the value of its last argument
+            This call will fail if the task attempts to generate output.
+            </summary>
+            <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+        </member>
         <member name="M:Step.Module.LoadDirectory(System.String,System.Boolean)">
             <summary>
             Load all source files in the specified directory
@@ -1936,6 +2153,21 @@
         <member name="T:Step.TextUtilities">
             <summary>
             Random utilities for working with text
+            </summary>
+        </member>
+        <member name="F:Step.TextUtilities.NewLineToken">
+            <summary>
+            Internal token used to signify the start of a new line
+            </summary>
+        </member>
+        <member name="F:Step.TextUtilities.NewParagraphToken">
+            <summary>
+            Internal token used to signify the start of a new paragraph
+            </summary>
+        </member>
+        <member name="F:Step.TextUtilities.FreshLineToken">
+            <summary>
+            Internal token used to signify that any future tokens should start on a fresh line.
             </summary>
         </member>
         <member name="M:Step.TextUtilities.Untokenize(System.Collections.Generic.IEnumerable{System.String},Step.FormattingOptions)">

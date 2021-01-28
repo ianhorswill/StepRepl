@@ -39,6 +39,8 @@ public class Repl
     public Module StepCode;
     public StepTask CurrentTask;
 
+    public bool TaskActive => CurrentTask != null && CurrentTask.Active;
+
     public TMP_InputField OutputText;
     public TMP_InputField Command;
     public TMP_InputField DebugOutput;
@@ -293,12 +295,7 @@ public class Repl
                 DebugText = warnings.Length == 0
                     ? ""
                     : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
-                var description = StepCode.Defines("Description") ? StepCode.Call("Description") : "";
-                var author = StepCode.Defines("Author") ? $"\nAuthor: {StepCode.Call("Author")}":"";
-                var keys = "";
-                if (ReplUtilities["HotKey"] is CompoundTask hot && hot.Methods.Count > 0)
-                    keys = StepCode.Call("ShowHotKeys");
-                OutputText.text = $"Project: <b>{Path.GetFileName(ProjectPath)}</b>{author}\n\n{description}\n\n{keys}";
+                ShowHelp(warnings.Length == 0);
             }
         }
         catch (Exception e)
@@ -307,6 +304,23 @@ public class Repl
         }
 
         //Command.Select();
+    }
+
+    private void ShowHelp(bool showCommandKeys = true)
+    {
+        if (!TaskActive)
+        {
+            var description = StepCode.Defines("Description") ? StepCode.Call("Description") : "";
+            var author = StepCode.Defines("Author") ? $"\nAuthor: {StepCode.Call("Author")}" : "";
+            var keys = "";
+            if (ReplUtilities["HotKey"] is CompoundTask hot && hot.Methods.Count > 0)
+                keys = StepCode.Call("ShowHotKeys");
+            OutputText.text = $"Project: <b>{Path.GetFileName(ProjectPath)}</b>{author}\n\n{description}\n\n{keys}";
+        }
+
+        if (showCommandKeys)
+            DebugText =
+                "<size=24><b>System command keys\n\nKey\t\tFunction</b>\nESC\t\tAbort running command\nPause\tInterrupt running command\nControl-R\tReload Step code\nF1\t\tHelp\nF4\t\tShow global state\nF5\t\tContinue execution\nF10\t\tStep over\nF11\t\tStep into\nShift-F11\tStep out</size>";
     }
 
     private void DeclareMainIfDefined(params string[] tasks)
@@ -332,12 +346,16 @@ public class Repl
     }
 
     [UsedImplicitly]
-    public void RunUserCommand()
+    public void RunUserCommand(string commandText = null)
     {
         AbortCurrentTask();
         DebugText = "";
-        var commandText = Command.text.Trim();
-        commandText = commandText.Replace("<b>", "").Replace("</b>", "");
+        if (commandText == null)
+        {
+            commandText = Command.text.Trim();
+            commandText = commandText.Replace("<b>", "").Replace("</b>", "");
+        }
+
         var command = commandText == "" ? lastCommand : commandText;
         lastCommand = command;
         
@@ -429,10 +447,22 @@ public class Repl
                     previouslyPaused = true;
                 }
 
-                if (Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.F5))
+                var f10 = Input.GetKeyDown(KeyCode.F10);
+                var f11 = Input.GetKeyDown(KeyCode.F11);
+                var f5 = Input.GetKeyDown(KeyCode.F5);
+                var shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                
+                if (f10 || f11 || f5)
                 {
-                    task.StepOverFrame = (Input.GetKeyDown(KeyCode.F10) && task.TraceEvent != Module.MethodTraceEvent.Succeed) ? MethodCallFrame.CurrentFrame.Caller : null;
-                    task.SingleStep = Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.F11);
+                    task.StepOverFrame = null;
+                    if (f10 && task.TraceEvent != Module.MethodTraceEvent.Succeed)
+                        task.StepOverFrame = MethodCallFrame.CurrentFrame.Caller;
+                    else if (f11 && shift)
+                        task.StepOverFrame = MethodCallFrame.CurrentFrame.Caller.Caller;
+                    
+                    task.SingleStep = f10 || f11;
+                    if (!task.SingleStep)
+                        DebugText = "";
                     task.Continue();
                     previouslyPaused = false;
                 }
@@ -457,6 +487,8 @@ public class Repl
             var exceptionMessage = (task.Exception is ThreadAbortException )? "Aborted" : task.Exception.Message;
             DebugText = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
         }
+
+        CurrentTask = null;
         //Command.Select();
     }
 
@@ -502,8 +534,16 @@ public class Repl
             switch (keyCode)
             {
                 case KeyCode.Escape:
-                case KeyCode.Break:
                     AbortCurrentTask();
+                    break;
+
+                case KeyCode.Pause:
+                case KeyCode.Break:
+                    if (CurrentTask != null)
+                    {
+                        CurrentTask.StepOverFrame = null;
+                        CurrentTask.SingleStep = true;
+                    }
                     break;
 
                 case KeyCode.R:
@@ -517,13 +557,21 @@ public class Repl
 
                     break;
 
+                case KeyCode.F1:
+                case KeyCode.Help:
+                    ShowHelp();
+                    break;
+
                 case KeyCode.F4:
                     ShowState();
                     break;
 
                 default:
                     if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
+                    {
+                        DebugText = "";
                         StartCoroutine(RunStepCommand($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]"));
+                    }
                     break;
             }
         }

@@ -70,7 +70,9 @@ public class StepTask
     
     public void SingleStepTraceHandler(Step.Module.MethodTraceEvent e, Method method, object[] args, TextBuffer output, BindingEnvironment env)
     {
-        if (StepOverFrame == null || (StepOverFrame == MethodCallFrame.CurrentFrame.Caller && (e == Module.MethodTraceEvent.Succeed || e == Module.MethodTraceEvent.CallFail)))
+        if (StepOverFrame == null 
+            || (StepOverFrame == MethodCallFrame.CurrentFrame.Caller && (e == Module.MethodTraceEvent.Succeed || e == Module.MethodTraceEvent.CallFail))
+            || (StepOverFrame.Caller == MethodCallFrame.CurrentFrame))
         {
             TraceEvent = e;
             Text = output.AsString;

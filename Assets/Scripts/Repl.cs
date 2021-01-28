@@ -17,7 +17,7 @@ using TMPro;
 public class Repl
     : MonoBehaviour
 {
-    private string[] SearchPath = new[]
+    private readonly string[] searchPath = new[]
     {
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR_WIN
         // This turns out to be a documented Mono issue.
@@ -42,10 +42,26 @@ public class Repl
     public TMP_InputField OutputText;
     public TMP_InputField Command;
     public TMP_InputField DebugOutput;
+    public ImageController ImageController;
+    public SoundController SoundController;
 
+    private string DebugText
+    {
+        get => DebugOutput.text;
+        set
+        {
+            ImageController.ImagePath = null;   // hide the image
+            SoundController.SoundPath = null;   // stop the BGM
+            DebugOutput.text = value;
+        }
+    }
+    
     private string lastCommand = "";
 
     public Module ReplUtilities;
+
+    private static readonly string[] ImageFileExtensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff"};
+    private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
 
     // Start is called before the first frame update
     [UsedImplicitly]
@@ -132,6 +148,102 @@ public class Repl
                 t.Pause(true);
                 t.BreakMessage = null;
                 return k(o, bindings.Unifications, bindings.State, p);
+            })),
+            
+            ["ImageHere"] = NamePrimitive("ImageHere", GeneralRelation<object,string>("ImageHere", null,
+                // ReSharper disable once AssignNullToNotNullAttribute
+                fileName =>
+                {
+                    string stringName;
+                    switch (fileName)
+                    {
+                        case string[] tokens:
+                            stringName = tokens.Untokenize(new FormattingOptions() {Capitalize = false});
+                            break;
+
+                        default:
+                            stringName = fileName.ToString();
+                            break;
+                    }
+
+                    var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
+                        stringName);
+
+                    if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                        return ImageFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
+                    if (File.Exists(path))
+                        return new[] {path};
+                    return new string[0];
+                },
+                null,null)),
+                    
+            ["ShowImage"] = NamePrimitive("ShowImage", Predicate<string>("ShowImage", path =>
+            {
+                if (path == "nothing")
+                {
+                    ImageController.ImagePath = null;
+                    return true;
+                }
+                if (!File.Exists(path))
+                    return false;
+                ImageController.ImagePath = path;
+                return true;
+            })),
+
+            ["SoundHere"] = NamePrimitive("SoundHere", GeneralRelation<object, string>("SoundHere", null,
+                // ReSharper disable once AssignNullToNotNullAttribute
+                fileName =>
+                {
+                    string stringName;
+                    switch (fileName)
+                    {
+                        case string[] tokens:
+                            stringName = tokens.Untokenize(new FormattingOptions() { Capitalize = false });
+                            break;
+
+                        default:
+                            stringName = fileName.ToString();
+                            break;
+                    }
+
+                    var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
+                        stringName);
+
+                    if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                        return SoundFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
+                    if (File.Exists(path))
+                        return new[] { path };
+                    return new string[0];
+                },
+                null, null)),
+
+
+            ["PlaySound"] = NamePrimitive("PlaySound", Predicate<string>("PlaySound", path =>
+            {
+                if (path == "nothing")
+                {
+                    SoundController.SoundPath = null;
+                    return true;
+                }
+                if (!File.Exists(path))
+                    return false;
+                SoundController.Loop = false;
+                SoundController.SoundPath = path;
+                return true;
+            })),
+
+            ["PlaySoundLoop"] = NamePrimitive("PlaySoundLoop", Predicate<string>("PlaySound", path =>
+            {
+                if (path == "nothing")
+                {
+                    SoundController.SoundPath = null;
+                    return true;
+                }
+                if (!File.Exists(path))
+                    return false;
+                SoundController.Loop = true;
+                SoundController.SoundPath = path;
+                return true;
             }))
         };
         
@@ -171,14 +283,14 @@ public class Repl
             };
 
             if (string.IsNullOrEmpty(ProjectPath))
-                DebugOutput.text =
+                DebugText =
                     "<color=red>No project selected.  Use \"project <i>projectName</i>\" to select your project directory.</color>";
             else
             {
                 StepCode.LoadDirectory(ProjectPath, true);
                 DeclareMainIfDefined("HotKey", "Author", "Description");
                 var warnings = StepCode.Warnings().ToArray();
-                DebugOutput.text = warnings.Length == 0
+                DebugText = warnings.Length == 0
                     ? ""
                     : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
                 var description = StepCode.Defines("Description") ? StepCode.Call("Description") : "";
@@ -191,7 +303,7 @@ public class Repl
         }
         catch (Exception e)
         {
-            DebugOutput.text = $"<color=red>{e.Message}</color>";
+            DebugText = $"<color=red>{e.Message}</color>";
         }
 
         //Command.Select();
@@ -209,7 +321,7 @@ public class Repl
 
     public string FindProject(string projectName)
     {
-        foreach (var collection in SearchPath)
+        foreach (var collection in searchPath)
         {
             var dir = Path.Combine(collection, projectName);
             if (Directory.Exists(dir))
@@ -223,7 +335,7 @@ public class Repl
     public void RunUserCommand()
     {
         AbortCurrentTask();
-        DebugOutput.text = "";
+        DebugText = "";
         var commandText = Command.text.Trim();
         commandText = commandText.Replace("<b>", "").Replace("</b>", "");
         var command = commandText == "" ? lastCommand : commandText;
@@ -235,7 +347,7 @@ public class Repl
             var path = FindProject(projectName);
             if (path == null)
             {
-                DebugOutput.text = $"<color=red>Can't find a project named {projectName}.</color>";
+                DebugText = $"<color=red>Can't find a project named {projectName}.</color>";
                 return;
             }
 
@@ -255,7 +367,7 @@ public class Repl
                 case "reload":
                     ReloadStepCode();
                     OutputText.text = "";
-                    DebugOutput.text = "Files reloaded\n\n"+DebugOutput.text;
+                    DebugText = "Files reloaded\n\n"+DebugText;
                     //Command.Select();
                     Command.text = "";
                     break;
@@ -311,7 +423,7 @@ public class Repl
                                 breakMessage = $"<color=red>Call failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
                                 break;
                         }
-                    DebugOutput.text = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
+                    DebugText = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
 
                     OutputText.text = task.Text ?? "";
                     previouslyPaused = true;
@@ -336,14 +448,14 @@ public class Repl
         
         if (task.Exception == null)
         {
-            OutputText.text = task.Text;
+            OutputText.text = task.Text; 
             DebugOutput.text = "";
             Command.SetTextWithoutNotify("");
         }
         else
         {
             var exceptionMessage = (task.Exception is ThreadAbortException )? "Aborted" : task.Exception.Message;
-            DebugOutput.text = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
+            DebugText = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
         }
         //Command.Select();
     }
@@ -365,12 +477,12 @@ public class Repl
             foreach (var pair in CurrentTask.State.Contents)
             {
                 gotOne = true;
-                b.AppendFormat("<b>{0}</b>: {1}\n\n", pair.Key, Step.Utilities.Writer.TermToString(pair.Value));
+                b.AppendFormat("<b>{0}</b>: {1}\n\n", pair.Key, Writer.TermToString(pair.Value));
             }
 
             if (!gotOne)
                 b.Append("State variables all have their default values");
-            DebugOutput.text = b.ToString();
+            DebugText = b.ToString();
         }
     }
 
@@ -399,7 +511,7 @@ public class Repl
                     {
                         AbortCurrentTask();
                         ReloadStepCode();
-                        DebugOutput.text = "Files reloaded\n\n" + DebugOutput.text;
+                        DebugText = "Files reloaded\n\n" + DebugText;
                         //Command.Select();
                     }
 

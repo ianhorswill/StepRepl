@@ -68,11 +68,10 @@ public class StepTask
 #pragma warning restore CS0618 // Type or member is obsolete
     }
     
-    public void SingleStepTraceHandler(Step.Module.MethodTraceEvent e, Method method, object[] args, TextBuffer output, BindingEnvironment env)
+    public void SingleStepTraceHandler(Module.MethodTraceEvent e, Method method, object[] args, TextBuffer output, BindingEnvironment env)
     {
-        if (StepOverFrame == null 
-            || (StepOverFrame == MethodCallFrame.CurrentFrame.Caller && (e == Module.MethodTraceEvent.Succeed || e == Module.MethodTraceEvent.CallFail))
-            || (StepOverFrame.Caller == MethodCallFrame.CurrentFrame))
+        if (StepOverFrame == null
+            || (StepOverFrame.StackDepth >= MethodCallFrame.CurrentFrame.Caller.StackDepth && (e == Module.MethodTraceEvent.Succeed || e == Module.MethodTraceEvent.CallFail)))
         {
             TraceEvent = e;
             Text = output.AsString;

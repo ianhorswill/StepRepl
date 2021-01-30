@@ -117,6 +117,16 @@
             Make a new FormattingOptions object
             </summary>
         </member>
+        <member name="T:Step.Interpreter.FluentUpdateStep">
+            <summary>
+            A step that updates a fluent
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.FluentUpdateStep.Updates">
+            <summary>
+            The updates made by this step
+            </summary>
+        </member>
         <member name="T:Step.Interpreter.FunctionalExpressionParser">
             <summary>
             Parser for arithmetic/functional expressions used in set commands.
@@ -705,6 +715,11 @@
             NOT THREAD SAFE
             </summary>
         </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.MaxStackDepth">
+            <summary>
+            Maximum number of method calls in a successful execution path.
+            </summary>
+        </member>
         <member name="P:Step.Interpreter.MethodCallFrame.CurrentFrame">
             <summary>
             The MethodCallFrame for the most recently called frame
@@ -751,6 +766,11 @@
         <member name="P:Step.Interpreter.MethodCallFrame.GoalChain">
             <summary>
             The chain of this frame and its predecessors
+            </summary>
+        </member>
+        <member name="F:Step.Interpreter.MethodCallFrame.StackDepth">
+            <summary>
+            Number of calls deep this call appears on the stack.
             </summary>
         </member>
         <member name="P:Step.Interpreter.MethodCallFrame.Arglist">
@@ -1169,6 +1189,15 @@
             Methods for accomplishing the task
             </summary>
         </member>
+        <member name="M:Step.Interpreter.CompoundTask.SetFluent(Step.State,System.Object[],System.Boolean)">
+            <summary>
+            Update the value of a fluent
+            </summary>
+            <param name="oldState">Current global state</param>
+            <param name="arglist">Argument values for this fluent to update</param>
+            <param name="truth">New truth value for this fluent on these arguments</param>
+            <returns>New global state</returns>
+        </member>
         <member name="T:Step.Interpreter.CompoundTask.TaskFlags">
             <summary>
             Declared properties of the task
@@ -1361,6 +1390,15 @@
             All the Calls in this chain
             </summary>
         </member>
+        <member name="M:Step.Interpreter.Step.ChainFromBody(System.String,System.Object[])">
+            <summary>
+            Given an array of tuples representing a Step expressions, make a step chain
+            </summary>
+            <param name="taskName">Name of the task to which this is an argument (for use in error messages)</param>
+            <param name="body"></param>
+            <returns></returns>
+            <exception cref="T:Step.Interpreter.ArgumentTypeException"></exception>
+        </member>
         <member name="P:Step.Interpreter.BranchStep.Callees">
             <inheritdoc />
         </member>
@@ -1510,7 +1548,7 @@
             Read the task name and argument pattern
             </summary>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.TryProcessMethodCall(Step.Parser.DefinitionStream.ChainBuilder)">
+        <member name="M:Step.Parser.DefinitionStream.TryProcessMethodCall(Step.Interpreter.Step.ChainBuilder)">
             <summary>
             If we're looking at a method call, compile it.
             </summary>
@@ -1527,12 +1565,12 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.TryProcessMentionExpression(Step.Parser.DefinitionStream.ChainBuilder)">
+        <member name="M:Step.Parser.DefinitionStream.TryProcessMentionExpression(Step.Interpreter.Step.ChainBuilder)">
             <summary>
             If we're looking at a mention expression (?x, ?x/Foo, ?x/Foo/Bar, etc.), compile it.
             </summary>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.ReadComplexMentionExpression(Step.Parser.DefinitionStream.ChainBuilder,Step.Interpreter.LocalVariableName)">
+        <member name="M:Step.Parser.DefinitionStream.ReadComplexMentionExpression(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.LocalVariableName)">
             <summary>
             Read an expression of the form ?local/STUFF
             Called after ?local has already been read.
@@ -1540,7 +1578,7 @@
             <param name="chain">Chain to add to</param>
             <param name="local">The variable before the /</param>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.ReadMentionExpressionTail(Step.Parser.DefinitionStream.ChainBuilder,Step.Interpreter.LocalVariableName,System.Object)">
+        <member name="M:Step.Parser.DefinitionStream.ReadMentionExpressionTail(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.LocalVariableName,System.Object)">
             <summary>
             Called after the last "/" of a complex mention expression.
             </summary>
@@ -1548,7 +1586,7 @@
             <param name="local">Result of the expression from before the last "/"</param>
             <param name="targetVar">Task to call on local</param>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.TryProcessTextBlock(Step.Parser.DefinitionStream.ChainBuilder)">
+        <member name="M:Step.Parser.DefinitionStream.TryProcessTextBlock(Step.Interpreter.Step.ChainBuilder)">
             <summary>
             If this is a sequence of fixed text tokens, compile them into an EmitStep.
             </summary>
@@ -1775,7 +1813,7 @@
             A dictionary whose contents is stored in the global State object
             </summary>
         </member>
-        <member name="M:Step.DictionaryStateElement`2.#ctor(System.String)">
+        <member name="M:Step.DictionaryStateElement`2.#ctor(System.String,System.Collections.Generic.IEqualityComparer{`0},System.Collections.Generic.IEqualityComparer{`1})">
             <summary>
             Make a new dictionary that lives in the global state.
             Since it lives in the global state, different states will have
@@ -1783,6 +1821,8 @@
             create a new global state.
             </summary>
             <param name="name">Name to give to the dictionary</param>
+            <param name="keyComparer">Equality comparer for to use for keys</param>
+            <param name="valueComparer">Equality comparer to use for values</param>
         </member>
         <member name="M:Step.DictionaryStateElement`2.Dictionary(Step.State)">
             <summary>
@@ -1841,6 +1881,18 @@
             True if object is *not* a logic variable or array containing a logic variable.
             This assumes that the value has already been resolved relative to an environment
             so any logic variables are uninstantiated.
+            </summary>
+        </member>
+        <member name="T:Step.Term.Comparer">
+            <summary>
+            IEqualityComparer for terms in the step language.
+            This does recursive comparison and hashing for object[] values, and the default
+            comparison and hash implementations for others.
+            </summary>
+        </member>
+        <member name="F:Step.Term.Comparer.Default">
+            <summary>
+            Singleton instance of the comparer 
             </summary>
         </member>
         <member name="M:Step.Utilities.Randomizer.Shuffle``1(System.Collections.Generic.IList{``0})">

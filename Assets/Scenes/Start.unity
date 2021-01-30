@@ -1539,7 +1539,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 652914381}
-        m_MethodName: RunUserCommand
+        m_MethodName: RunReplCommand
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

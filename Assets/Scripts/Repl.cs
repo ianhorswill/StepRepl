@@ -70,6 +70,7 @@ public class Repl
     void Start()
     {
         Application.quitting += AbortCurrentTask;
+        MethodCallFrame.MaxStackDepth = 500;
         
         Module.RichTextStackTraces = true;
         
@@ -346,10 +347,13 @@ public class Repl
     }
 
     [UsedImplicitly]
+    public void RunReplCommand() => RunUserCommand();
+
     public void RunUserCommand(string commandText = null)
     {
         AbortCurrentTask();
         DebugText = "";
+        OutputText.text = "";
         if (commandText == null)
         {
             commandText = Command.text.Trim();

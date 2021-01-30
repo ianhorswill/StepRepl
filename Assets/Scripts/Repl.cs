@@ -22,9 +22,9 @@ public class Repl
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR_WIN
         // This turns out to be a documented Mono issue.
         // See https://xamarin.github.io/bugzilla-archives/41/41258/bug.html
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+"/Documents", "Imaginarium")
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+"/Documents", "Step")
 #else
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Imaginarium")
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step")
 #endif
         ,
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GitHub")
@@ -369,7 +369,7 @@ public class Repl
             var path = FindProject(projectName);
             if (path == null)
             {
-                DebugText = $"<color=red>Can't find a project named {projectName}.</color>";
+                DebugText = $"<color=red>Can't find a project named {projectName}.</color>\n<color=#808080>I searched in:\n   \u2022  {string.Join("\n   \u2022  ", searchPath)}</color>";
                 return;
             }
 

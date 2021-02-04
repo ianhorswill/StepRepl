@@ -112,6 +112,11 @@
             Text marking the end of a paragraph
             </summary>
         </member>
+        <member name="F:Step.FormattingOptions.SuppressLeadingVerticalSpace">
+            <summary>
+            Ignore paragraph and newline marks at the beginning of the output
+            </summary>
+        </member>
         <member name="M:Step.FormattingOptions.#ctor">
             <summary>
             Make a new FormattingOptions object
@@ -1157,6 +1162,27 @@
             <typeparam name="T2">Type of the second argument</typeparam>
             <returns>Implementation that can be called by internal code</returns>
         </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.SimpleFunction``2(System.String,System.Func{``0,``1})">
+            <summary>
+            Makes a primitive predicate that implements a non-invertible function
+            </summary>
+            <param name="name">Predicate name</param>
+            <param name="implementation">Lambda to implement the function</param>
+            <typeparam name="TIn">Input type</typeparam>
+            <typeparam name="TOut">Output type of the function</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:Step.Interpreter.PrimitiveTask.SimpleFunction``3(System.String,System.Func{``0,``1,``2})">
+            <summary>
+            Makes a primitive predicate that implements a non-invertible function
+            </summary>
+            <param name="name">Predicate name</param>
+            <param name="implementation">Lambda to implement the function</param>
+            <typeparam name="TIn1">Type of first argument to function</typeparam>
+            <typeparam name="TIn2">Type of second argument</typeparam>
+            <typeparam name="TOut">Output type of the function</typeparam>
+            <returns></returns>
+        </member>
         <member name="M:Step.Interpreter.PrimitiveTask.UnaryFunction``2(System.String,System.Func{``0,``1},System.Func{``1,``0})">
             <summary>
             Make a binary relation from an implementation of a unary function
@@ -1748,7 +1774,7 @@
             Current character is non-newline whitespace
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.IsPunctuationNotQuestionMarkOrLT">
+        <member name="P:Step.Parser.TokenStream.IsPunctuationNotSpecial">
             <summary>
             Current character is some punctuation symbol other than '?'
             '?' is treated specially because it's allowed to start a variable-name token.
@@ -2220,6 +2246,11 @@
         <member name="F:Step.TextUtilities.FreshLineToken">
             <summary>
             Internal token used to signify that any future tokens should start on a fresh line.
+            </summary>
+        </member>
+        <member name="F:Step.TextUtilities.ForceSpaceToken">
+            <summary>
+            A token that forces a space between two tokens that wouldn't otherwise have have spaces between them.
             </summary>
         </member>
         <member name="M:Step.TextUtilities.Untokenize(System.Collections.Generic.IEnumerable{System.String},Step.FormattingOptions)">

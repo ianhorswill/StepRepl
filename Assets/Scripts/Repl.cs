@@ -152,7 +152,11 @@ public class Repl
                 t.BreakMessage = null;
                 return k(o, bindings.Unifications, bindings.State, p);
             })),
-            
+
+            ["ClearOutput"] = NamePrimitive("ClearOutput",
+                (MetaTask)((args, o, bindings, k, p) => 
+                    k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p))),
+
             ["ImageHere"] = NamePrimitive("ImageHere", GeneralRelation<object,string>("ImageHere", null,
                 // ReSharper disable once AssignNullToNotNullAttribute
                 fileName =>
@@ -448,6 +452,7 @@ public class Repl
                     DebugText = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
 
                     OutputText.text = task.Text ?? "";
+                    OutputText.caretPosition = task.Text.Length;
                     previouslyPaused = true;
                 }
 

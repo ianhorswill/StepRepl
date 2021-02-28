@@ -265,10 +265,11 @@ public class Repl
             "DisplayCallCount ?s ?t ?count: [?s ?t ?value] [set ?average = ?value/?count] [Write ?average]",
             "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]",
             "predicate HotKey ?key ?doc ?implementation.",
-            "RunHotKey ?key: [HotKey ?key ? ?code] [Call ?code]",
+            "RunHotKey ?key: [firstOf] [HotKey ?key ? ?code] [else] [= ?code [UndefinedHotKey ?key]] [end] [firstOf] [Call ?code] [else] Command failed: ?code/Write [end]",
+            "UndefinedHotKey ?key: ?key/Write is not a defined hot key.",
             "ShowHotKeys: <b>Key <indent=100> Function </indent></b> [NewLine] [ForEach [HotKey ?key ?doc ?] [WriteHotKeyDocs ?key ?doc]]",
             "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]"
-            );
+        );
 
         ReloadStepCode();
     }
@@ -573,6 +574,9 @@ public class Repl
 
                 case KeyCode.F4:
                     ShowState();
+                    break;
+
+                case KeyCode.None:
                     break;
 
                 default:

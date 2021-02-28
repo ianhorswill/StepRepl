@@ -122,6 +122,12 @@
             Make a new FormattingOptions object
             </summary>
         </member>
+        <member name="P:Step.Interpreter.BranchingStep.Callees">
+            <inheritdoc />
+        </member>
+        <member name="P:Step.Interpreter.BranchingStep.Calls">
+            <inheritdoc />
+        </member>
         <member name="T:Step.Interpreter.FluentUpdateStep">
             <summary>
             A step that updates a fluent
@@ -155,12 +161,6 @@
             <summary>
             Implements a sequence in which each successive call invokes the next branch
             </summary>
-        </member>
-        <member name="P:Step.Interpreter.SequenceStep.Callees">
-            <inheritdoc />
-        </member>
-        <member name="P:Step.Interpreter.SequenceStep.Calls">
-            <inheritdoc />
         </member>
         <member name="M:Step.Interpreter.SequenceStep.#ctor(Step.Interpreter.Step[],Step.Interpreter.Step)">
             <summary>
@@ -406,6 +406,12 @@
             recursively recopies the array and dereferences its elements
             </summary>
         </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.TryCopyGround(System.Object,System.Object@)">
+            <summary>
+            Dereference all variables in term
+            If the resulting term has uninstantiated variables, return false.
+            </summary>
+        </member>
         <member name="T:Step.Interpreter.BindingList`1">
             <summary>
             Represents values of variables of different types.
@@ -580,6 +586,16 @@
             After succeeding, it will fail for Duration subsequent calls.
             </summary>
         </member>
+        <member name="F:Step.Interpreter.CoolStep.ReadyTimes">
+            <summary>
+            Call number for the task of which this is a part at which this step will become runnable again
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CoolStep.ReadyTime(Step.State)">
+            <summary>
+            Call number (for enclosing task) at which this step will be runnable again
+            </summary>
+        </member>
         <member name="T:Step.Interpreter.EmitStep">
             <summary>
             A step that dumps a fixed set of tokens to the output.
@@ -734,6 +750,11 @@
         <member name="F:Step.Interpreter.MethodCallFrame.Method">
             <summary>
             The method being called
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.MethodCallFrame.Task">
+            <summary>
+            The task being called in this frame.
             </summary>
         </member>
         <member name="P:Step.Interpreter.MethodCallFrame.BindingsAtCallTime">
@@ -1215,6 +1236,16 @@
             Methods for accomplishing the task
             </summary>
         </member>
+        <member name="F:Step.Interpreter.CompoundTask.CallCounts">
+            <summary>
+            Dictionary of how many successful or pending calls to this task are on this execution path.
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.CallCount(Step.State)">
+            <summary>
+            Return the number of successful or pending calls to this task in the specified state.
+            </summary>
+        </member>
         <member name="M:Step.Interpreter.CompoundTask.SetFluent(Step.State,System.Object[],System.Boolean)">
             <summary>
             Update the value of a fluent
@@ -1269,6 +1300,11 @@
             This task is a suffix that modifies the last generated token.
             </summary>
         </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.ContainsCoolStep">
+            <summary>
+            True if some method has a cool step
+            </summary>
+        </member>
         <member name="M:Step.Interpreter.CompoundTask.Declare(Step.Interpreter.CompoundTask.TaskFlags)">
             <summary>
             Programmatic interface for declaring attributes of task
@@ -1303,6 +1339,11 @@
         <member name="P:Step.Interpreter.CompoundTask.Suffix">
             <summary>
             This task replaces the previous token in the output
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.ContainsCoolStep">
+            <summary>
+            True if some method contains a cool step
             </summary>
         </member>
         <member name="M:Step.Interpreter.CompoundTask.AddMethod(System.Single,System.Object[],Step.Interpreter.LocalVariableName[],Step.Interpreter.Step,Step.Interpreter.CompoundTask.TaskFlags,System.String,System.Int32)">
@@ -1345,6 +1386,11 @@
         <member name="P:Step.Interpreter.CompoundTask.Calls">
             <summary>
             All the Call steps of all the methods of this task
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.CompoundTask.FluentUpdates">
+            <summary>
+            All the fluent updates of the methods of this task.
             </summary>
         </member>
         <member name="T:Step.Interpreter.Step">
@@ -1406,6 +1452,12 @@
             All the steps in the chain starting with this step
             </summary>
         </member>
+        <member name="M:Step.Interpreter.Step.SubSteps">
+            <summary>
+            The step itself plus any steps from this step's branches, if it's a branching step
+            </summary>
+            <returns></returns>
+        </member>
         <member name="P:Step.Interpreter.Step.CalleesOfChain">
             <summary>
             All the callees of all the calls in this chain
@@ -1425,11 +1477,10 @@
             <returns></returns>
             <exception cref="T:Step.Interpreter.ArgumentTypeException"></exception>
         </member>
-        <member name="P:Step.Interpreter.BranchStep.Callees">
-            <inheritdoc />
-        </member>
-        <member name="P:Step.Interpreter.BranchStep.Calls">
-            <inheritdoc />
+        <member name="M:Step.Interpreter.Step.AnyStep(System.Predicate{Step.Interpreter.Step})">
+            <summary>
+            True if some step in this step chain satisfies the predicate.
+            </summary>
         </member>
         <member name="T:Step.Parser.DefinitionStream">
             <summary>
@@ -1875,7 +1926,7 @@
             Otherwise, return the specified default value.
             </summary>
         </member>
-        <member name="M:Step.DictionaryStateElement`2.Add(Step.State,`0,`1)">
+        <member name="M:Step.DictionaryStateElement`2.SetItem(Step.State,`0,`1)">
             <summary>
             Associates a new value to the specified key in this dictionary, in the specified State.
             </summary>

@@ -1482,6 +1482,53 @@
             True if some step in this step chain satisfies the predicate.
             </summary>
         </member>
+        <member name="T:Step.Parser.CsvFileTokenStream">
+            <summary>
+            Transforms a CSV file into a sequence of tokens (strings not containing whitespace) defining methods for a predicate.
+            </summary>
+        </member>
+        <member name="M:Step.Parser.CsvFileTokenStream.#ctor(System.IO.TextReader,System.String)">
+            <summary>
+            Make a new token stream reading from the specified text stream
+            </summary>
+            <param name="input">Stream to read from</param>
+            <param name="filePath">Path of the stream if it comes from a file (for debug messages)</param>
+        </member>
+        <member name="F:Step.Parser.TokenStream.FilePath">
+            <summary>
+            Path to file being read from, if any
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.LeftDoubleQuote">
+            <summary>
+            The Unicode left double quote
+            </summary>
+        </member>
+        <member name="F:Step.Parser.TokenStream.RightDoubleQuote">
+            <summary>
+            The Unicode right double quote
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.LineNumber">
+            <summary>
+            Line number of file being read from
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.Tokens">
+            <summary>
+            The stream of tokens read from the stream.
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.End">
+            <summary>
+            True if we're at the end of the stream
+            </summary>
+        </member>
+        <member name="P:Step.Parser.TokenStream.Peek">
+            <summary>
+            Return the current character, without advancing
+            </summary>
+        </member>
         <member name="T:Step.Parser.DefinitionStream">
             <summary>
             Reads a stream of method definitions from a TextReader.
@@ -1684,6 +1731,11 @@
             Make an object that reads a stream of nested expressions from a file
             </summary>
         </member>
+        <member name="M:Step.Parser.ExpressionStream.#ctor(System.String)">
+            <summary>
+            Make an object that reads a stream of nested expressions from a file
+            </summary>
+        </member>
         <member name="M:Step.Parser.ExpressionStream.#ctor(Step.Parser.TokenStream)">
             <summary>
             Make an object that reads a stream of nested expressions from a TokenStream
@@ -1737,106 +1789,71 @@
         <member name="M:Step.Parser.SyntaxError.#ctor(System.String,System.String,System.Int32)">
             <inheritdoc />
         </member>
-        <member name="T:Step.Parser.TokenStream">
+        <member name="T:Step.Parser.TextFileTokenStream">
             <summary>
             Transforms a stream of characters into a sequence of tokens (strings not containing whitespace)
             </summary>
         </member>
-        <member name="F:Step.Parser.TokenStream.LeftDoubleQuote">
-            <summary>
-            The Unicode left double quote
-            </summary>
-        </member>
-        <member name="F:Step.Parser.TokenStream.RightDoubleQuote">
-            <summary>
-            The Unicode right double quote
-            </summary>
-        </member>
-        <member name="M:Step.Parser.TokenStream.#ctor(System.IO.TextReader,System.String)">
+        <member name="M:Step.Parser.TextFileTokenStream.#ctor(System.IO.TextReader,System.String)">
             <summary>
             Make a new token stream reading from the specified text stream
             </summary>
             <param name="input">Stream to read from</param>
             <param name="filePath">Path of the stream if it comes from a file (for debug messages)</param>
         </member>
-        <member name="F:Step.Parser.TokenStream.FilePath">
-            <summary>
-            Path to file being read from, if any
-            </summary>
-        </member>
-        <member name="P:Step.Parser.TokenStream.LineNumber">
-            <summary>
-            Line number of file being read from
-            </summary>
-        </member>
-        <member name="F:Step.Parser.TokenStream.token">
+        <member name="F:Step.Parser.TextFileTokenStream.token">
             <summary>
             Buffer for accumulating characters into tokens
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.HaveToken">
+        <member name="P:Step.Parser.TextFileTokenStream.HaveToken">
             <summary>
             True it token buffer non-empty
             </summary>
         </member>
-        <member name="M:Step.Parser.TokenStream.AddCharToToken">
+        <member name="M:Step.Parser.TextFileTokenStream.AddCharToToken">
             <summary>
             Add current stream character to token
             </summary>
         </member>
-        <member name="M:Step.Parser.TokenStream.ConsumeToken">
+        <member name="M:Step.Parser.TextFileTokenStream.ConsumeToken">
             <summary>
             Return the accumulated characters as a token and clear the token buffer.
             </summary>
         </member>
-        <member name="F:Step.Parser.TokenStream.input">
-            <summary>
-            The raw text stream
-            </summary>
-        </member>
-        <member name="P:Step.Parser.TokenStream.End">
-            <summary>
-            True if we're at the end of the stream
-            </summary>
-        </member>
-        <member name="P:Step.Parser.TokenStream.Peek">
-            <summary>
-            Return the current character, without advancing
-            </summary>
-        </member>
-        <member name="M:Step.Parser.TokenStream.Get">
+        <member name="M:Step.Parser.TextFileTokenStream.Get">
             <summary>
             Return the current character and advance to the next
             </summary>
             <returns></returns>
         </member>
-        <member name="M:Step.Parser.TokenStream.Skip">
+        <member name="M:Step.Parser.TextFileTokenStream.Skip">
             <summary>
             Synonym for Get().  Used to indicate the character is being deliberately thrown away.
             </summary>
         </member>
-        <member name="M:Step.Parser.TokenStream.SkipWhitespace">
+        <member name="M:Step.Parser.TextFileTokenStream.SkipWhitespace">
             <summary>
             Skip over all whitespace chars, except newlines (they're considered tokens)
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.IsWhiteSpace">
+        <member name="P:Step.Parser.TextFileTokenStream.IsWhiteSpace">
             <summary>
             Current character is non-newline whitespace
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.IsPunctuationNotSpecial">
+        <member name="P:Step.Parser.TextFileTokenStream.IsPunctuationNotSpecial">
             <summary>
             Current character is some punctuation symbol other than '?'
             '?' is treated specially because it's allowed to start a variable-name token.
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.IsEndOfWord">
+        <member name="P:Step.Parser.TextFileTokenStream.IsEndOfWord">
             <summary>
             True if the current character can't be a continuation of a word token.
             </summary>
         </member>
-        <member name="P:Step.Parser.TokenStream.Tokens">
+        <member name="P:Step.Parser.TextFileTokenStream.Tokens">
             <summary>
             The stream of tokens read from the stream.
             </summary>
@@ -2047,6 +2064,11 @@
             Extension used for source files
             </summary>
         </member>
+        <member name="F:Step.Module.CsvExtension">
+            <summary>
+            Extension for CSV files
+            </summary>
+        </member>
         <member name="M:Step.Module.#ctor(System.String)">
             <summary>
             Make a module that inherits from Global
@@ -2177,7 +2199,7 @@
             </summary>
             <param name="path">Path to the file</param>
         </member>
-        <member name="M:Step.Module.LoadDefinitions(System.IO.TextReader,System.String)">
+        <member name="M:Step.Module.LoadDefinitions(Step.Parser.DefinitionStream)">
             <summary>
             Load the method definitions from stream into this module
             </summary>

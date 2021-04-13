@@ -65,6 +65,8 @@ public class Repl
     private static readonly string[] ImageFileExtensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff"};
     private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
 
+    public float DefaultScreenDpi = 96;
+
     // Start is called before the first frame update
     [UsedImplicitly]
     void Start()
@@ -154,6 +156,7 @@ public class Repl
             })),
 
             ["ClearOutput"] = NamePrimitive("ClearOutput",
+                // ReSharper disable once UnusedParameter.Local
                 (MetaTask)((args, o, bindings, k, p) => 
                     k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p))),
 
@@ -397,6 +400,11 @@ public class Repl
                     DebugText = "Files reloaded\n\n"+DebugText;
                     //Command.Select();
                     Command.text = "";
+                    break;
+
+                case "quit":
+                case "Quit":
+                    Application.Quit();
                     break;
             
                 default:

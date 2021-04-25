@@ -5,6 +5,7 @@ using UnityEngine;
 using Step;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
@@ -12,6 +13,8 @@ using Step.Interpreter;
 using Step.Utilities;
 using static Step.Interpreter.PrimitiveTask;
 using TMPro;
+using UnityEditor;
+using UnityEngine.SceneManagement;
 
 [UsedImplicitly]
 public class Repl
@@ -36,8 +39,8 @@ public class Repl
         set => PlayerPrefs.SetString("CurrentProject", value);
     }
     
-    public Module StepCode;
-    public StepTask CurrentTask;
+    public static Module StepCode;
+    public static StepTask CurrentTask;
 
     public bool TaskActive => CurrentTask != null && CurrentTask.Active;
 
@@ -60,7 +63,7 @@ public class Repl
     
     private string lastCommand = "";
 
-    public Module ReplUtilities;
+    public static Module ReplUtilities;
 
     private static readonly string[] ImageFileExtensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff"};
     private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
@@ -254,7 +257,20 @@ public class Repl
                 SoundController.Loop = true;
                 SoundController.SoundPath = path;
                 return true;
-            }))
+            })),
+            
+            ["Reload"] = NamePrimitive("ReloadScene", Predicate<int>("Reload", x =>
+            {
+                Action a = CommandQueue.rl;
+                CommandQueue.Hit(a);
+                return true;
+            })),
+            ["Load"] = NamePrimitive("Load", Predicate<int>("Load", x =>
+            {
+                Action a = CommandQueue.next;
+                CommandQueue.Hit(a);
+                return true;
+            })),
         };
         
         ReplUtilities.AddDefinitions(

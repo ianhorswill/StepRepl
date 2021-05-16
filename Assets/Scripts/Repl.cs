@@ -19,6 +19,8 @@ public class Repl
 {
     private readonly string[] searchPath = new[]
     {
+        // NOTE: THIS MUST BE THE FIRST ELEMENT OF THE PATH!
+        // EnsureProjectDirectory() relies on it!
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR_WIN
         // This turns out to be a documented Mono issue.
         // See https://xamarin.github.io/bugzilla-archives/41/41258/bug.html
@@ -73,6 +75,8 @@ public class Repl
     {
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
+
+        EnsureProjectDirectory();
         
         Module.RichTextStackTraces = true;
         
@@ -275,6 +279,15 @@ public class Repl
         );
 
         ReloadStepCode();
+    }
+
+    private void EnsureProjectDirectory()
+    {
+        var projectDirectoryPath = searchPath[0];
+
+        // I know the test is supposed to be redundant, but I've had issues with platform ports
+        if (!Directory.Exists(projectDirectoryPath))
+            Directory.CreateDirectory(projectDirectoryPath);
     }
 
     private void ReloadStepCode()

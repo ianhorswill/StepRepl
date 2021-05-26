@@ -93,7 +93,7 @@ public class Repl
                     {
                         output[index++] = v.Name.Name;
                         output[index++] = "=";
-                        output[index++] = Writer.TermToString(bindings.Resolve(v, bindings.Unifications));
+                        output[index++] = Writer.TermToString(bindings.CopyTerm(v));
                         output[index++] = TextUtilities.NewLineToken;
                     }
 

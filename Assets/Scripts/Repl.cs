@@ -453,25 +453,32 @@ public class Repl
                     var breakMessage =
                         task.BreakMessage!=null ? $"<color=red><b>{task.BreakMessage}</b></color>\n\n" : "";
                     if (breakMessage == "")
+                    {
+                        var method = MethodCallFrame.CurrentFrame.Method;
+                        var headString = method.HeadString;
+                        var callString = $"{headString.Substring(1, headString.Length-2)}: ..."; //<i>at {Path.GetFileName(method.FilePath)}:{method.LineNumber}</i>";
                         switch (task.TraceEvent)
                         {
                             case Module.MethodTraceEvent.Enter:
-                                breakMessage = $"<color=white>Enter method:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                breakMessage = $"<color=white>Enter method:</color> {callString}\n";
                                 break;
 
                             case Module.MethodTraceEvent.Succeed:
-                                breakMessage = $"<color=green>Method succeeded:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                breakMessage = $"<color=green>Method succeeded:</color> {callString}\n";
                                 break;
 
                             case Module.MethodTraceEvent.MethodFail:
-                                breakMessage = $"<color=red>Method failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                breakMessage = $"<color=red>Method failed:</color> {callString}\n";
                                 break;
 
                             case Module.MethodTraceEvent.CallFail:
-                                breakMessage = $"<color=red>Call failed:</color> {MethodCallFrame.CurrentFrame.Method.HeadString}\n";
+                                breakMessage = $"<color=red>Call failed:</color> {callString}\n";
                                 break;
                         }
-                    DebugText = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace}" : "";
+                    }
+
+                    var bindings = task.TraceEvent == Module.MethodTraceEvent.None?null:task.Environment.Unifications;
+                    DebugText = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace(bindings)}" : "";
 
                     OutputText.text = task.Text ?? "";
                     OutputText.caretPosition = task.Text.Length;
@@ -516,7 +523,7 @@ public class Repl
         else
         {
             var exceptionMessage = (task.Exception is ThreadAbortException )? "Aborted" : task.Exception.Message;
-            DebugText = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
+            DebugText = $"<color=red><b>{exceptionMessage}</b></color>\n\n{Module.StackTrace()}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{task.Exception.StackTrace}</color>";
         }
 
         CurrentTask = null;

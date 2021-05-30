@@ -12,6 +12,8 @@ public class StepTask
 
     private ThreadState ThreadState => thread.ThreadState;
     public string Text { get; set; }
+
+    public BindingEnvironment Environment { get; private set; }
     public State State { get; set; }
     public Exception Exception { get; private set; }
 
@@ -76,7 +78,9 @@ public class StepTask
             TraceEvent = e;
             Text = output.AsString;
             State = env.State;
+            Environment = env;
             Pause(true);
+            TraceEvent = Module.MethodTraceEvent.None;
         }
     }
 

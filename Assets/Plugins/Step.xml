@@ -719,6 +719,12 @@
             The argument pattern for this method expressed as the course code for a call
             </summary>
         </member>
+        <member name="M:Step.Interpreter.Method.HeadStringWithBindings(Step.Interpreter.BindingEnvironment)">
+            <summary>
+            Generate the head string, but substitute in the values of any variables
+            </summary>
+            <param name="env">Binding environment with values of variables</param>
+        </member>
         <member name="P:Step.Interpreter.Method.Callees">
             <summary>
             All the tasks called by this method
@@ -2386,7 +2392,7 @@
             <param name="caller">Caller (but be a CompoundTask)</param>
             <param name="callee">Target of call (can be a CompoundTask or a primitive task, i.e. a delegate)</param>
         </member>
-        <member name="P:Step.Module.StackTrace">
+        <member name="M:Step.Module.StackTrace(Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">
             <summary>
             Return a trace of the method calls from the current frame.
             </summary>
@@ -2406,6 +2412,11 @@
         <member name="T:Step.Module.MethodTraceEvent">
             <summary>
             Which event is being traced (a call, success, or failure)
+            </summary>
+        </member>
+        <member name="F:Step.Module.MethodTraceEvent.None">
+            <summary>
+            No recent trace event.
             </summary>
         </member>
         <member name="F:Step.Module.MethodTraceEvent.Enter">

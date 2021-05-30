@@ -13,11 +13,16 @@ public class CommandQueue: MonoBehaviour
 {
     private static ConcurrentQueue<Action> cQue = new ConcurrentQueue<Action>();
     private AudioSource audioSource;
-    private static CommandQueue queue = null;
+    public static CommandQueue queue = null;
     private Action curr=null;
+    public static Func<object> WhatIShouldDo;
+    public GameObject popUp;
+    public GameObject MultiUp;
+    private Canvas canvas;
     public void Start()
     {
         audioSource = GetComponent<AudioSource>();
+        canvas = FindObjectOfType<Canvas>();
         if (queue == null)
         {
             DontDestroyOnLoad(this.gameObject);
@@ -45,12 +50,13 @@ public class CommandQueue: MonoBehaviour
         cQue.Enqueue(i);
     }
 
-    public static void rl()
+    public void pop()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Instantiate(popUp, canvas.transform).GetComponent<PopUp>().CreateYesNo();
     }
-    public static void next()
+    public void pop(String[] a)
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex+1);
+        Instantiate(MultiUp, canvas.transform).GetComponent<PopUp>().CreateMulti(a);
     }
+
 }

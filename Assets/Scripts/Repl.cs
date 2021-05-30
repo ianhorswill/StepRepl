@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
@@ -259,17 +260,52 @@ public class Repl
                 return true;
             })),
             
-            ["Reload"] = NamePrimitive("ReloadScene", Predicate<int>("Reload", x =>
+            ["Reload"] = NamePrimitive("ReloadScene", Predicate("Reload", () =>
             {
-                Action a = CommandQueue.rl;
+                Action a = () => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                 CommandQueue.Hit(a);
                 return true;
             })),
-            ["Load"] = NamePrimitive("Load", Predicate<int>("Load", x =>
+            ["Load"] = NamePrimitive("Load", Predicate<object>("Load", x =>
             {
-                Action a = CommandQueue.next;
+                Action a = null;
+                string s = x.ToString();
+                bool b = int.TryParse(s, out int i);
+                if(b)
+                    a = () => SceneManager.LoadScene(i);
+                else
+                    a = () => SceneManager.LoadScene(s);
                 CommandQueue.Hit(a);
                 return true;
+            })),
+            ["Pop"] = NamePrimitive("Pop", Predicate("Pop", () =>
+            {
+                Action a = () => { CommandQueue.queue.pop(); };
+                CommandQueue.Hit(a);
+                CurrentTask.Pause();
+                Boolean re = false;
+                if(CommandQueue.WhatIShouldDo!=null)
+                { re = (Boolean)CommandQueue.WhatIShouldDo.Invoke();
+                   CommandQueue.WhatIShouldDo = null;
+                }
+                Debug.Log(re);
+                return re;
+
+            })),
+            ["PopUp"] = NamePrimitive("PopUp", SimpleFunction<String, String, String, String>("PopUp", (x,b,c) =>
+            {
+                Action a = () => { CommandQueue.queue.pop(new String[] {x, b, c}); };
+                CommandQueue.Hit(a);
+                CurrentTask.Pause();
+               String re = null;
+                if (CommandQueue.WhatIShouldDo != null)
+                {
+                    re = (String)CommandQueue.WhatIShouldDo.Invoke();
+                    CommandQueue.WhatIShouldDo = null;
+                }
+                Debug.Log(re);
+                return re;
+
             })),
         };
         

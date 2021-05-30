@@ -284,8 +284,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 204915859}
-  - component: {fileID: 204915858}
   - component: {fileID: 204915857}
+  - component: {fileID: 204915858}
   m_Layer: 0
   m_Name: Test
   m_TagString: Untagged
@@ -401,6 +401,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eca954d6b258b0b4d99db496d5c4eb32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  popUp: {fileID: 3936395479701874662, guid: 321c545d659401f4588499784ffe7a04, type: 3}
+  MultiUp: {fileID: 8212807110964754406, guid: 04d8a55ee04f4b44fba9a1a0caf808da, type: 3}
 --- !u!4 &204915859
 Transform:
   m_ObjectHideFlags: 0

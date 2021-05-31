@@ -258,7 +258,9 @@ public class Repl
                 SoundController.Loop = true;
                 SoundController.SoundPath = path;
                 return true;
-            }))
+            })),
+            
+            ["HTMLTag"] = NamePrimitive("HTMLTag", (DeterministicTextGenerator2)((tag, value) => new [] { $"<{tag}=\"{value}\">" }))
         };
         
         ReplUtilities.AddDefinitions(

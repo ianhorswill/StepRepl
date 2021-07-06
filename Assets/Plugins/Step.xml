@@ -321,6 +321,11 @@
             Make a binding environment identical to e but with v bound to newValue
             </summary>
         </member>
+        <member name="M:Step.Interpreter.BindingEnvironment.#ctor(Step.Module,Step.Interpreter.MethodCallFrame,Step.Interpreter.BindingList{Step.Interpreter.LogicVariable},Step.State)">
+            <summary>
+            Make a new binding environment with the specified components
+            </summary>
+        </member>
         <member name="M:Step.Interpreter.BindingEnvironment.NewEmpty">
             <summary>
             Make a new binding environment with nothing in it.
@@ -547,6 +552,9 @@
             <param name="predecessor">Predecessor frame</param>
             <returns>True if this steps, the rest of its step-chain, and the continuation all succeed.</returns>
         </member>
+        <member name="P:Step.Interpreter.Call.Source">
+            <inheritdoc />
+        </member>
         <member name="T:Step.Interpreter.CallException">
             <summary>
             Signals that something went wrong in a call to a task
@@ -717,6 +725,11 @@
         <member name="P:Step.Interpreter.Method.HeadString">
             <summary>
             The argument pattern for this method expressed as the course code for a call
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Method.MethodCode">
+            <summary>
+            An approximate reconstruction of the original course text for this method.
             </summary>
         </member>
         <member name="M:Step.Interpreter.Method.HeadStringWithBindings(Step.Interpreter.BindingEnvironment)">
@@ -1373,6 +1386,11 @@
             True if some method has a cool step
             </summary>
         </member>
+        <member name="F:Step.Interpreter.CompoundTask.TaskFlags.Function">
+            <summary>
+            This fluent is also a function, so for ground instances, its last parameter is unique given its other parameters.
+            </summary>
+        </member>
         <member name="M:Step.Interpreter.CompoundTask.Declare(Step.Interpreter.CompoundTask.TaskFlags)">
             <summary>
             Programmatic interface for declaring attributes of task
@@ -1412,6 +1430,12 @@
         <member name="P:Step.Interpreter.CompoundTask.ContainsCoolStep">
             <summary>
             True if some method contains a cool step
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.CompoundTask.Function">
+            <summary>
+            This predicate represents a function.  So the final argument of ground
+            instances is unique given the values of the other arguments.
             </summary>
         </member>
         <member name="M:Step.Interpreter.CompoundTask.AddMethod(System.Single,System.Object[],Step.Interpreter.LocalVariableName[],Step.Interpreter.Step,Step.Interpreter.CompoundTask.TaskFlags,System.String,System.Int32)">
@@ -1548,6 +1572,11 @@
         <member name="M:Step.Interpreter.Step.AnyStep(System.Predicate{Step.Interpreter.Step})">
             <summary>
             True if some step in this step chain satisfies the predicate.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Step.Source">
+            <summary>
+            Make an approximation to the source code for this step;
             </summary>
         </member>
         <member name="T:Step.Parser.CsvFileTokenStream">
@@ -2057,6 +2086,17 @@
             Singleton instance of the comparer 
             </summary>
         </member>
+        <member name="F:Step.Term.Comparer.ForFunctions">
+            <summary>
+            Comparer to use for cache results on function fluents; ignores the last argument.
+            </summary>
+        </member>
+        <member name="F:Step.Term.Comparer.FunctionComparer">
+            <summary>
+            True if this is the comparer used for result caches on functions
+            If so, we need to ignore the last element of a top-level tuple.
+            </summary>
+        </member>
         <member name="T:Step.Utilities.Inflection">
             <summary>
             Implements a best effort to convert between English plural and singular noun inflections
@@ -2438,6 +2478,9 @@
             <summary>
             The call completely failed
             </summary>
+        </member>
+        <member name="M:Step.Module.ToString">
+            <inheritdoc />
         </member>
         <member name="T:Step.StateVariableName">
             <summary>

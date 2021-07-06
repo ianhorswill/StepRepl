@@ -44,6 +44,7 @@ public class StepTask
 
     public StepTask(Module m, bool singleStep, string code)
     {
+        MethodCallFrame.MaxStackDepth = 1000;
         Module = m;
         SingleStep = singleStep;
 
@@ -59,7 +60,7 @@ public class StepTask
                 Exception = e;
                 Text = null;
             }
-        }, 4000000);
+        }, 8000000);
         thread.Start();
     }
 

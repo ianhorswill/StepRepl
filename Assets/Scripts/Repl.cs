@@ -10,13 +10,36 @@ using System.Threading;
 using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
-using static Step.Interpreter.PrimitiveTask;
 using TMPro;
 
 [UsedImplicitly]
 public class Repl
     : MonoBehaviour
 {
+    public static Repl CurrentRepl { get; private set; }
+
+
+    public static bool RetainState;
+    public static State ExecutionState = State.Empty;
+
+    static Repl()
+    {
+        Step.EnvironmentOption.Handler += (option, args) =>
+        {
+            CurrentRepl.EnvironmentOption(option, args);
+        };
+    }
+
+    private void EnvironmentOption(string option, object[] args)
+    {
+        switch (option)
+        {
+            case "retainState":
+                RetainState = true;
+                break;
+        }
+    }
+
     private static readonly string[] SearchPath = new[]
     {
         // NOTE: THIS MUST BE THE FIRST ELEMENT OF THE PATH!
@@ -73,6 +96,7 @@ public class Repl
     [UsedImplicitly]
     void Start()
     {
+        CurrentRepl = this;
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
 
@@ -84,8 +108,8 @@ public class Repl
         {
             ReplUtilities = new Module("Repl utilities", Module.Global)
             {
-                ["PrintLocalBindings"] = NamePrimitive("PrintLocalBindings",
-                    (MetaTask) ((args, o, bindings, k, p) =>
+                ["PrintLocalBindings"] = new GeneralPrimitive("PrintLocalBindings",
+                    (args, o, bindings, p, k) =>
                     {
                         ArgumentCountException.Check("PrintLocalBindings", 0, args);
                         var locals = bindings.Frame.Locals;
@@ -100,10 +124,10 @@ public class Repl
                         }
 
                         return k(o.Append(output), bindings.Unifications, bindings.State, p);
-                    })),
+                    }),
 
-                ["SampleOutputText"] = NamePrimitive("SampleOutputText",
-                    (MetaTask) ((args, o, bindings, k, p) =>
+                ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",
+                    (args, o, bindings, p, k) =>
                     {
                         ArgumentCountException.Check("SampleOutputText", 0, args);
                         var t = StepTask.CurrentStepTask;
@@ -116,15 +140,15 @@ public class Repl
                         }
 
                         return k(o, bindings.Unifications, bindings.State, p);
-                    })),
+                    }),
 
-                ["EmptyCallSummary"] = GeneralRelation("EmptyCallSummary",
+                ["EmptyCallSummary"] = new GeneralPredicate<Dictionary<CompoundTask, int>>("EmptyCallSummary",
                     _ => false,
                     () => new[] {new Dictionary<CompoundTask, int>()}
                 ),
 
-                ["NoteCalledTasks"] = NamePrimitive("NoteCalledTasks",
-                    (MetaTask) ((args, output, env, k, predecessor) =>
+                ["NoteCalledTasks"] = new GeneralPrimitive("NoteCalledTasks",
+                    (args, output, env, predecessor, k) =>
                     {
                         ArgumentCountException.Check("NoteCalledTasks", 1, args);
                         var callSummary =
@@ -137,9 +161,9 @@ public class Repl
                         }
 
                         return k(output, env.Unifications, env.State, predecessor);
-                    })),
+                    }),
 
-                ["Pause"] = NamePrimitive("Pause", (MetaTask) ((args, o, bindings, k, p) =>
+                ["Pause"] = new GeneralPrimitive("Pause", (args, o, bindings, p, k) =>
                 {
                     ArgumentCountException.Check("Pause", 0, args);
                     var t = StepTask.CurrentStepTask;
@@ -147,9 +171,9 @@ public class Repl
                     t.State = bindings.State;
                     t.Pause(t.SingleStep);
                     return k(o, bindings.Unifications, bindings.State, p);
-                })),
+                }),
 
-                ["Break"] = NamePrimitive("Break", (MetaTask) ((args, o, bindings, k, p) =>
+                ["Break"] = new GeneralPrimitive("Break", (args, o, bindings, p, k) =>
                 {
                     var t = StepTask.CurrentStepTask;
                     if (args.Length > 0)
@@ -159,14 +183,14 @@ public class Repl
                     t.Pause(true);
                     t.BreakMessage = null;
                     return k(o, bindings.Unifications, bindings.State, p);
-                })),
+                }),
 
-                ["ClearOutput"] = NamePrimitive("ClearOutput",
+                ["ClearOutput"] = new GeneralPrimitive("ClearOutput",
                     // ReSharper disable once UnusedParameter.Local
-                    (MetaTask) ((args, o, bindings, k, p) =>
-                        k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p))),
+                    (args, o, bindings, p, k) =>
+                        k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p)),
 
-                ["ImageHere"] = NamePrimitive("ImageHere", GeneralRelation<object, string>("ImageHere", null,
+                ["ImageHere"] = new GeneralPredicate<object, string>("ImageHere", null,
                     // ReSharper disable once AssignNullToNotNullAttribute
                     fileName =>
                     {
@@ -191,9 +215,9 @@ public class Repl
                             return new[] {path};
                         return new string[0];
                     },
-                    null, null)),
+                    null, null),
 
-                ["ShowImage"] = NamePrimitive("ShowImage", Predicate<string>("ShowImage", path =>
+                ["ShowImage"] = new SimplePredicate<string>("ShowImage", path =>
                 {
                     if (path == "nothing")
                     {
@@ -205,9 +229,9 @@ public class Repl
                         return false;
                     ImageController.ImagePath = path;
                     return true;
-                })),
+                }),
 
-                ["SoundHere"] = NamePrimitive("SoundHere", GeneralRelation<object, string>("SoundHere", null,
+                ["SoundHere"] = new GeneralPredicate<object, string>("SoundHere", null,
                     // ReSharper disable once AssignNullToNotNullAttribute
                     fileName =>
                     {
@@ -232,10 +256,10 @@ public class Repl
                             return new[] {path};
                         return new string[0];
                     },
-                    null, null)),
+                    null, null),
 
 
-                ["PlaySound"] = NamePrimitive("PlaySound", Predicate<string>("PlaySound", path =>
+                ["PlaySound"] = new SimplePredicate<string>("PlaySound", path =>
                 {
                     if (path == "nothing")
                     {
@@ -248,9 +272,9 @@ public class Repl
                     SoundController.Loop = false;
                     SoundController.SoundPath = path;
                     return true;
-                })),
+                }),
 
-                ["PlaySoundLoop"] = NamePrimitive("PlaySoundLoop", Predicate<string>("PlaySound", path =>
+                ["PlaySoundLoop"] = new SimplePredicate<string>("PlaySound", path =>
                 {
                     if (path == "nothing")
                     {
@@ -263,10 +287,10 @@ public class Repl
                     SoundController.Loop = true;
                     SoundController.SoundPath = path;
                     return true;
-                })),
+                }),
 
-                ["HTMLTag"] = NamePrimitive("HTMLTag",
-                    (DeterministicTextGenerator2) ((htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"}))
+                ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
+                    (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})
             };
 
             ReplUtilities.AddDefinitions(

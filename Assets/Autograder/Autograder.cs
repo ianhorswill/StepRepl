@@ -2,7 +2,6 @@
 using System.IO;
 using Step;
 using Step.Interpreter;
-using static Step.Interpreter.PrimitiveTask;
 
 public static class Autograder
 {
@@ -10,63 +9,57 @@ public static class Autograder
     {
         var g = Repl.ReplUtilities;
 
-        g["EraseMethods"] = NamePrimitive("EraseMethods",
-            Predicate<CompoundTask>("EraseMethods", m =>
+        g["EraseMethods"] = new SimplePredicate<CompoundTask>("EraseMethods", m =>
             {
                 m.EraseMethods();
                 return true;
-            }));
+            });
 
-        g["MakeModule"] = NamePrimitive("MakeModule", UnaryFunction<string, Module>("MakeModule",
+        g["MakeModule"] = new SimpleFunction<string, Module>("MakeModule",
             path =>
             {
                 var m = new Module(Path.GetFileName(path), g);
                 m.LoadDirectory(path);
                 return m;
-            }));
+            });
 
-        g["LoadDirectory"] = NamePrimitive("LoadDirectory", Predicate<string, Module>("LoadDirectory",
+        g["LoadDirectory"] = new SimplePredicate<string, Module>("LoadDirectory",
             (path, m) =>
             {
                 m.LoadDirectory(path);
                 return true;
-            }));
+            });
 
-        g["LoadFile"]= NamePrimitive("LoadFile", Predicate<string, Module>("LoadFile",
+        g["LoadFile"]= new SimplePredicate<string, Module>("LoadFile",
             (path, m) =>
             {
                 m.LoadDefinitions(path);
                 return true;
-            }));
+            });
 
-        g["PathFileName"] =
-            NamePrimitive("PathFileName", SimpleFunction<string, string>("PathFileName", Path.GetFileName));
+        g["PathFileName"] = new SimpleFunction<string, string>("PathFileName", Path.GetFileName);
+        g["DirectoryFilePath"] = new SimpleFunction<string, string, string>("DirectoryFilePath", Path.Combine);
 
-        g["DirectoryFilePath"] =
-            NamePrimitive("DirectoryFilePath", SimpleFunction<string, string, string>("DirectoryFilePath", Path.Combine));
-
-        g["DirectoryFile"] = NamePrimitive("DirectoryFile", GeneralRelation<string, string>("DirectoryFile",
+        g["DirectoryFile"] = new GeneralPredicate<string, string>("DirectoryFile",
             (d,f) => Path.GetDirectoryName(f) == d,
             Directory.GetFiles, 
             f=> new [] { Path.GetDirectoryName(f) },
-            null));
+            null);
 
-        g["DirectorySubdirectory"] = NamePrimitive("DirectorySubdirectory", GeneralRelation<string, string>("DirectorySubdirectory",
+        g["DirectorySubdirectory"] = new GeneralPredicate<string, string>("DirectorySubdirectory",
             (d, f) => Path.GetDirectoryName(f) == d,
             Directory.GetDirectories,
             f => new[] { Path.GetDirectoryName(f) },
-            null));
+            null);
 
-        g["ProjectDirectory"] = NamePrimitive("SubdirectoryHere", SimpleFunction<string, string>("SubdirectoryHere", Repl.FindProject));
+        g["ProjectDirectory"] = new SimpleFunction<string, string>("SubdirectoryHere", Repl.FindProject);
 
-        g[nameof(CallInModule)] = NamePrimitive(nameof(CallInModule), (MetaTask) CallInModule);
-        g[nameof(CallResult)] = NamePrimitive(nameof(CallResult), (MetaTask)CallResult);
-        g["LookupGlobal"] = NamePrimitive("LookupGlobal",
-            SimpleFunction<string[], Module, object>("LookupGlobal", 
-                (name, module) => module[name[0]]));
-        
-        g["ParseSubmissionName"] = NamePrimitive("ParseSubmissionName",
-            (NonDeterministicRelation) ((args, env) =>
+        g[nameof(CallInModule)] = new GeneralPrimitive(nameof(CallInModule), CallInModule);
+        g[nameof(CallResult)] = new GeneralPrimitive(nameof(CallResult), CallResult);
+        g["LookupGlobal"] = new SimpleFunction<string[], Module, object>("LookupGlobal", (name, module) => module[name[0]]);
+
+        g["ParseSubmissionName"] = new GeneralNAryPredicate("ParseSubmissionName",
+            args =>
             {
                 ArgumentCountException.Check("ParseSubmissionName", 3, args);
                 var path = ArgumentTypeException.Cast<string>("ParseSubmissionName", args[0], args);
@@ -78,16 +71,13 @@ public static class Autograder
                 var id = elements[1];
                 if (id == "LATE")
                     id = elements[2];
-                if (env.UnifyArrays(args, new object[]{ path, student, id }, out BindingList<LogicVariable> bindings))
-                    // Succeed once
-                    return new[] { bindings };
-                // Fail
-                return new BindingList<LogicVariable>[0];
-            }));
+                return new[] {new object[] {path, student, id}};
+            });
     }
 
     private static bool CallInModule(object[] args, TextBuffer output, BindingEnvironment env,
-        Step.Interpreter.Step.Continuation k, MethodCallFrame predecessor)
+        MethodCallFrame predecessor,
+        Step.Interpreter.Step.Continuation k)
     {
         ArgumentCountException.CheckAtLeast(nameof(CallInModule), 2, args);
         var call = ArgumentTypeException.Cast<object[]>(nameof(CallInModule), args[0], args);
@@ -110,7 +100,7 @@ public static class Autograder
     }
 
     private static bool CallResult(object[] args, TextBuffer output, BindingEnvironment env,
-        Step.Interpreter.Step.Continuation k, MethodCallFrame predecessor)
+        MethodCallFrame predecessor, Step.Interpreter.Step.Continuation k)
     {
         ArgumentCountException.Check(nameof(CallResult), 2, args);
         var call = ArgumentTypeException.Cast<object[]>(nameof(CallResult), args[0], args);
@@ -119,6 +109,7 @@ public static class Autograder
         if (call.Length == 2 && call[0] == Module.Global["Not"])
             call = call[1] as object[];
 
+        // ReSharper disable once PossibleNullReferenceException
         var task = call[0] as CompoundTask;
         if (task == null)
             throw new InvalidOperationException(

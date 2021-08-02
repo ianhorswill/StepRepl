@@ -53,7 +53,10 @@ public class StepTask
             CurrentStepTask = this;
             try
             {
-                Text = m.ParseAndExecute(code);
+                var (output, newState) = m.ParseAndExecute(code, Repl.ExecutionState);
+                Text = output;
+                if (Repl.RetainState)
+                    Repl.ExecutionState = newState;
             }
             catch (Exception e)
             {

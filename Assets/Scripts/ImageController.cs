@@ -1,11 +1,61 @@
 ﻿using System.Collections;
 using System.IO;
+using System.Linq;
 using JetBrains.Annotations;
+using Step;
+using Step.Interpreter;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ImageController : MonoBehaviour
 {
+    private static readonly string[] ImageFileExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff" };
+
+    static ImageController()
+    {
+        Module.Global["ImageHere"] = new GeneralPredicate<object, string>("ImageHere", null,
+            // ReSharper disable once AssignNullToNotNullAttribute
+            fileName =>
+            {
+                string stringName;
+                switch (fileName)
+                {
+                    case string[] tokens:
+                        stringName = tokens.Untokenize(new FormattingOptions() {Capitalize = false});
+                        break;
+
+                    default:
+                        stringName = fileName.ToString();
+                        break;
+                }
+
+                var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
+                    stringName);
+
+                if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                    return ImageFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
+                if (File.Exists(path))
+                    return new[] {path};
+                return new string[0];
+            },
+            null, null);
+        Module.Global["ShowImage"] = new SimplePredicate<string>("ShowImage", path =>
+        {
+            if (path == "nothing")
+            {
+                FindObjectOfType<ImageController>().ImagePath = null;
+                return true;
+            }
+
+            if (!File.Exists(path))
+                return false;
+            FindObjectOfType<ImageController>().ImagePath = path;
+            return true;
+        });
+
+
+    }
+
     private Image image;
     private string path;
     private bool pathChanged;
@@ -27,7 +77,20 @@ public class ImageController : MonoBehaviour
     {
         image = GetComponent<Image>();
         poll = StartCoroutine(PollPath());
-        Application.quitting += () => StopCoroutine(poll);
+        Repl.EnterDebug = EnterDebug;
+    }
+
+    [UsedImplicitly]
+    private void EnterDebug()
+    {
+        ImagePath = null;
+    }
+
+    [UsedImplicitly]
+    private void OnDisable()
+    {
+        StopCoroutine(poll);
+        Repl.EnterDebug -= EnterDebug;
     }
 
     private IEnumerator PollPath()

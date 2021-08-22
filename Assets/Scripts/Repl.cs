@@ -22,6 +22,8 @@ public class Repl
     public static bool RetainState;
     public static State ExecutionState = State.Empty;
 
+    public static Action EnterDebug;
+
     static Repl()
     {
         Step.EnvironmentOption.Handler += (option, args) =>
@@ -30,6 +32,7 @@ public class Repl
         };
     }
 
+    // ReSharper disable once UnusedParameter.Local
     private void EnvironmentOption(string option, object[] args)
     {
         switch (option)
@@ -69,16 +72,14 @@ public class Repl
     public TMP_InputField OutputText;
     public TMP_InputField Command;
     public TMP_InputField DebugOutput;
-    public ImageController ImageController;
-    public SoundController SoundController;
 
     private string DebugText
     {
         get => DebugOutput.text;
         set
         {
-            ImageController.ImagePath = null;   // hide the image
-            SoundController.SoundPath = null;   // stop the BGM
+            if (EnterDebug != null)
+                EnterDebug();
             DebugOutput.text = value;
         }
     }
@@ -87,8 +88,6 @@ public class Repl
 
     public static Module ReplUtilities;
 
-    private static readonly string[] ImageFileExtensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff"};
-    private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
 
     //public float DefaultScreenDpi = 96;
 
@@ -189,105 +188,6 @@ public class Repl
                     // ReSharper disable once UnusedParameter.Local
                     (args, o, bindings, p, k) =>
                         k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p)),
-
-                ["ImageHere"] = new GeneralPredicate<object, string>("ImageHere", null,
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    fileName =>
-                    {
-                        string stringName;
-                        switch (fileName)
-                        {
-                            case string[] tokens:
-                                stringName = tokens.Untokenize(new FormattingOptions() {Capitalize = false});
-                                break;
-
-                            default:
-                                stringName = fileName.ToString();
-                                break;
-                        }
-
-                        var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
-                            stringName);
-
-                        if (string.IsNullOrEmpty(Path.GetExtension(path)))
-                            return ImageFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
-                        if (File.Exists(path))
-                            return new[] {path};
-                        return new string[0];
-                    },
-                    null, null),
-
-                ["ShowImage"] = new SimplePredicate<string>("ShowImage", path =>
-                {
-                    if (path == "nothing")
-                    {
-                        ImageController.ImagePath = null;
-                        return true;
-                    }
-
-                    if (!File.Exists(path))
-                        return false;
-                    ImageController.ImagePath = path;
-                    return true;
-                }),
-
-                ["SoundHere"] = new GeneralPredicate<object, string>("SoundHere", null,
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    fileName =>
-                    {
-                        string stringName;
-                        switch (fileName)
-                        {
-                            case string[] tokens:
-                                stringName = tokens.Untokenize(new FormattingOptions() {Capitalize = false});
-                                break;
-
-                            default:
-                                stringName = fileName.ToString();
-                                break;
-                        }
-
-                        var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
-                            stringName);
-
-                        if (string.IsNullOrEmpty(Path.GetExtension(path)))
-                            return SoundFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
-                        if (File.Exists(path))
-                            return new[] {path};
-                        return new string[0];
-                    },
-                    null, null),
-
-
-                ["PlaySound"] = new SimplePredicate<string>("PlaySound", path =>
-                {
-                    if (path == "nothing")
-                    {
-                        SoundController.SoundPath = null;
-                        return true;
-                    }
-
-                    if (!File.Exists(path))
-                        return false;
-                    SoundController.Loop = false;
-                    SoundController.SoundPath = path;
-                    return true;
-                }),
-
-                ["PlaySoundLoop"] = new SimplePredicate<string>("PlaySound", path =>
-                {
-                    if (path == "nothing")
-                    {
-                        SoundController.SoundPath = null;
-                        return true;
-                    }
-
-                    if (!File.Exists(path))
-                        return false;
-                    SoundController.Loop = true;
-                    SoundController.SoundPath = path;
-                    return true;
-                }),
 
                 ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
                     (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})

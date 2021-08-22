@@ -1,12 +1,81 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using JetBrains.Annotations;
+using Step;
+using Step.Interpreter;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class SoundController : MonoBehaviour
 {
+    private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
+
+    static SoundController()
+    {
+        Module.Global["SoundHere"] = new GeneralPredicate<object, string>("SoundHere", null,
+            // ReSharper disable once AssignNullToNotNullAttribute
+            fileName =>
+            {
+                string stringName;
+                switch (fileName)
+                {
+                    case string[] tokens:
+                        stringName = tokens.Untokenize(new FormattingOptions() {Capitalize = false});
+                        break;
+
+                    default:
+                        stringName = fileName.ToString();
+                        break;
+                }
+
+                var path = Path.Combine(Path.GetDirectoryName(MethodCallFrame.CurrentFrame.Method.FilePath),
+                    stringName);
+
+                if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                    return SoundFileExtensions.Select(p => Path.ChangeExtension(path, p)).Where(File.Exists);
+                if (File.Exists(path))
+                    return new[] {path};
+                return new string[0];
+            },
+            null, null);
+
+
+        Module.Global["PlaySound"] = new SimplePredicate<string>("PlaySound", path =>
+        {
+            var soundController = FindObjectOfType<SoundController>();
+            if (path == "nothing")
+            {
+                soundController.SoundPath = null;
+                return true;
+            }
+
+            if (!File.Exists(path))
+                return false;
+            soundController.Loop = false;
+            soundController.SoundPath = path;
+            return true;
+        });
+
+        Module.Global["PlaySoundLoop"] = new SimplePredicate<string>("PlaySound", path =>
+        {
+            var soundController = FindObjectOfType<SoundController>();
+            if (path == "nothing")
+            {
+                soundController.SoundPath = null;
+                return true;
+            }
+
+            if (!File.Exists(path))
+                return false;
+            soundController.Loop = true;
+            soundController.SoundPath = path;
+            return true;
+        });
+    }
+
+
     private AudioSource audioSource;
     private string path;
     private bool pathChanged;
@@ -29,7 +98,16 @@ public class SoundController : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         poll = StartCoroutine(PollPath());
-        Application.quitting += () => StopCoroutine(poll);
+        Repl.EnterDebug += StopSound;
+    }
+
+    private void StopSound() => SoundPath = null;
+
+    [UsedImplicitly]
+    private void OnDisable()
+    {
+        StopCoroutine(poll);
+        Repl.EnterDebug -= StopSound;
     }
 
     private IEnumerator PollPath()

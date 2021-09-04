@@ -64,7 +64,7 @@ public class Repl
         set => PlayerPrefs.SetString("CurrentProject", value);
     }
     
-    public Module StepCode;
+    public Module ProjectModule;
     public StepTask CurrentTask;
 
     public bool TaskActive => CurrentTask != null && CurrentTask.Active;
@@ -236,7 +236,7 @@ public class Repl
                 hotKey.Declare(CompoundTask.TaskFlags.Fallible | CompoundTask.TaskFlags.MultipleSolutions);
             }
             
-            StepCode = new Module("main", ReplUtilities)
+            ProjectModule = new Module("main", ReplUtilities)
             {
                 FormattingOptions = {ParagraphMarker = "\n\n", LineSeparator = "<br>"}
             };
@@ -246,9 +246,9 @@ public class Repl
                     "<color=red>No project selected.  Use \"project <i>projectName</i>\" to select your project directory.</color>";
             else
             {
-                StepCode.LoadDirectory(ProjectPath, true);
+                ProjectModule.LoadDirectory(ProjectPath, true);
                 DeclareMainIfDefined("HotKey", "Author", "Description");
-                var warnings = StepCode.Warnings().ToArray();
+                var warnings = ProjectModule.Warnings().ToArray();
                 DebugText = warnings.Length == 0
                     ? ""
                     : $"<color=yellow>I noticed some possible problems with the code.  They may be intentional, in which case, feel free to disregard them:\n\n{string.Join("\n", warnings)}</color>";
@@ -267,11 +267,11 @@ public class Repl
     {
         if (!TaskActive)
         {
-            var description = StepCode.Defines("Description") ? StepCode.Call("Description") : "";
-            var author = StepCode.Defines("Author") ? $"\nAuthor: {StepCode.Call("Author")}" : "";
+            var description = ProjectModule.Defines("Description") ? ProjectModule.Call("Description") : "";
+            var author = ProjectModule.Defines("Author") ? $"\nAuthor: {ProjectModule.Call("Author")}" : "";
             var keys = "";
             if (ReplUtilities["HotKey"] is CompoundTask hot && hot.Methods.Count > 0)
-                keys = StepCode.Call("ShowHotKeys");
+                keys = ProjectModule.Call("ShowHotKeys");
             OutputText.text = $"Project: <b>{Path.GetFileName(ProjectPath)}</b>{author}\n\n{description}\n\n{keys}";
         }
 
@@ -283,9 +283,9 @@ public class Repl
     private void DeclareMainIfDefined(params string[] tasks)
     {
         foreach (var taskName in tasks)
-            if (StepCode.Defines(taskName))
+            if (ProjectModule.Defines(taskName))
             {
-                if (StepCode[taskName] is CompoundTask task) 
+                if (ProjectModule[taskName] is CompoundTask task) 
                     task.Declare(CompoundTask.TaskFlags.Main);
             }
     }
@@ -301,6 +301,12 @@ public class Repl
 
         return null;
     }
+
+    public StepCallback MakeCallBack(Module module, Func<State> stateThunk, Task task, params object[] taskArguments) =>
+        new StepCallback(this, module, stateThunk, task, taskArguments);
+
+    public StepCallback MakeCallBack(Task task, params object[] taskArguments)
+        => MakeCallBack(ProjectModule, () => ExecutionState, task, taskArguments);
 
     [UsedImplicitly]
     public void RunReplCommand() => RunUserCommand();
@@ -363,15 +369,25 @@ public class Repl
                         command = $"[Test {command} 10000]";
 
                     command += "[PrintLocalBindings]";
-                    StartCoroutine(RunStepCommand(command));
+                    RunStepCode(command);
                     break;
                 }
             }
     }
 
-    private IEnumerator RunStepCommand(string code)
+    public void RunStepCode(Module module, State state, Task task, params object[] args)
+        => RunStepTask(new StepTask(module, false, () => module.Call(state, task, args)));
+
+    private void RunStepCode(string code) => RunStepTask(new StepTask(ProjectModule, false, code, ExecutionState));
+
+    public void RunStepTask(StepTask task)
     {
-        var task = CurrentTask = new StepTask(StepCode, false, code);
+        CurrentTask = task;
+        StartCoroutine(StepTaskDriver(task));
+    }
+
+    IEnumerator StepTaskDriver(StepTask task)
+    {
         var previouslyPaused = false;
         while (task.Active)
         {
@@ -547,7 +563,7 @@ public class Repl
                     if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
                     {
                         DebugText = "";
-                        StartCoroutine(RunStepCommand($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]"));
+                        RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
                     }
                     break;
             }

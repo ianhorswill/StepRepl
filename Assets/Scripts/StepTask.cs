@@ -42,7 +42,13 @@ public class StepTask
 
     public MethodCallFrame StepOverFrame;
 
-    public StepTask(Module m, bool singleStep, string code)
+    public delegate (string output, State outState) StepInvocation();
+
+    public StepTask(Module m, bool singleStep, string code, State state)
+        : this(m, singleStep, () => m.ParseAndExecute(code, state))
+    { }
+
+    public StepTask(Module m, bool singleStep, StepInvocation start)
     {
         MethodCallFrame.MaxStackDepth = 1000;
         Module = m;
@@ -53,7 +59,7 @@ public class StepTask
             CurrentStepTask = this;
             try
             {
-                var (output, newState) = m.ParseAndExecute(code, Repl.ExecutionState);
+                var (output, newState) = start();
                 Text = output;
                 if (Repl.RetainState)
                     Repl.ExecutionState = newState;

@@ -30,6 +30,8 @@ public class Repl
         {
             CurrentRepl.EnvironmentOption(option, args);
         };
+
+        MakeUtilitiesModule();
     }
 
     // ReSharper disable once UnusedParameter.Local
@@ -63,7 +65,7 @@ public class Repl
         get => PlayerPrefs.GetString("CurrentProject", null);
         set => PlayerPrefs.SetString("CurrentProject", value);
     }
-    
+
     public Module ProjectModule;
     public StepTask CurrentTask;
 
@@ -98,122 +100,120 @@ public class Repl
         CurrentRepl = this;
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
-
-        EnsureProjectDirectory();
-        
         Module.RichTextStackTraces = true;
-
-        if (ReplUtilities == null)
-        {
-            ReplUtilities = new Module("Repl utilities", Module.Global)
-            {
-                ["PrintLocalBindings"] = new GeneralPrimitive("PrintLocalBindings",
-                    (args, o, bindings, p, k) =>
-                    {
-                        ArgumentCountException.Check("PrintLocalBindings", 0, args);
-                        var locals = bindings.Frame.Locals;
-                        var output = new string[locals.Length * 4];
-                        var index = 0;
-                        foreach (var v in locals)
-                        {
-                            output[index++] = v.Name.Name;
-                            output[index++] = "=";
-                            output[index++] = Writer.TermToString(bindings.CopyTerm(v));
-                            output[index++] = TextUtilities.NewLineToken;
-                        }
-
-                        return k(o.Append(output), bindings.Unifications, bindings.State, p);
-                    }),
-
-                ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",
-                    (args, o, bindings, p, k) =>
-                    {
-                        ArgumentCountException.Check("SampleOutputText", 0, args);
-                        var t = StepTask.CurrentStepTask;
-                        // Don't generate another sample if the last one hasn't been displayed yet.
-                        if (!t.NewSample)
-                        {
-                            t.Text = o.AsString;
-                            t.State = bindings.State;
-                            t.NewSample = true;
-                        }
-
-                        return k(o, bindings.Unifications, bindings.State, p);
-                    }),
-
-                ["EmptyCallSummary"] = new GeneralPredicate<Dictionary<CompoundTask, int>>("EmptyCallSummary",
-                    _ => false,
-                    () => new[] {new Dictionary<CompoundTask, int>()}
-                ),
-
-                ["NoteCalledTasks"] = new GeneralPrimitive("NoteCalledTasks",
-                    (args, output, env, predecessor, k) =>
-                    {
-                        ArgumentCountException.Check("NoteCalledTasks", 1, args);
-                        var callSummary =
-                            ArgumentTypeException.Cast<Dictionary<CompoundTask, int>>("NoteCalledTasks", args[0], args);
-                        foreach (var frame in predecessor.GoalChain)
-                        {
-                            var task = frame.Method.Task;
-                            callSummary.TryGetValue(task, out var previousCount);
-                            callSummary[task] = previousCount + 1;
-                        }
-
-                        return k(output, env.Unifications, env.State, predecessor);
-                    }),
-
-                ["Pause"] = new GeneralPrimitive("Pause", (args, o, bindings, p, k) =>
-                {
-                    ArgumentCountException.Check("Pause", 0, args);
-                    var t = StepTask.CurrentStepTask;
-                    t.Text = o.AsString;
-                    t.State = bindings.State;
-                    t.Pause(t.SingleStep);
-                    return k(o, bindings.Unifications, bindings.State, p);
-                }),
-
-                ["Break"] = new GeneralPrimitive("Break", (args, o, bindings, p, k) =>
-                {
-                    var t = StepTask.CurrentStepTask;
-                    if (args.Length > 0)
-                        t.BreakMessage = ((string[]) args[0]).Untokenize();
-                    t.Text = o.AsString;
-                    t.State = bindings.State;
-                    t.Pause(true);
-                    t.BreakMessage = null;
-                    return k(o, bindings.Unifications, bindings.State, p);
-                }),
-
-                ["ClearOutput"] = new GeneralPrimitive("ClearOutput",
-                    // ReSharper disable once UnusedParameter.Local
-                    (args, o, bindings, p, k) =>
-                        k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p)),
-
-                ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
-                    (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})
-            };
-
-            ReplUtilities.AddDefinitions(
-                "predicate TestCase ?code.",
-                "RunTestCases: [ForEach [TestCase ?call] [RunTestCase ?call]] All tests passed!",
-                "RunTestCase ?call: Running ?call ... [Paragraph] [SampleOutputText] [Call ?call] [SampleOutputText]",
-                "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
-                "Sample ?task ?testCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText] [= ?attempt ?testCount]",
-                "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
-                "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Write \"<pos=400>\"] [DisplayCallCount ?s ?t ?count] [NewLine]]",
-                "DisplayCallCount ?s ?t ?count: [?s ?t ?value] [set ?average = ?value/?count] [Write ?average]",
-                "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]",
-                "predicate HotKey ?key ?doc ?implementation.",
-                "RunHotKey ?key: [firstOf] [HotKey ?key ? ?code] [else] [= ?code [UndefinedHotKey ?key]] [end] [firstOf] [Call ?code] [else] Command failed: ?code/Write [end]",
-                "UndefinedHotKey ?key: ?key/Write is not a defined hot key.",
-                "ShowHotKeys: <b>Key <indent=100> Function </indent></b> [NewLine] [ForEach [HotKey ?key ?doc ?] [WriteHotKeyDocs ?key ?doc]]",
-                "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]"
-            );
-            
-            Autograder.AddBuiltins();
-        }
+        EnsureProjectDirectory();
 
         ReloadStepCode();
+    }
+
+    private static void MakeUtilitiesModule()
+    {
+        ReplUtilities = new Module("Repl utilities", Module.Global)
+        {
+            ["PrintLocalBindings"] = new GeneralPrimitive("PrintLocalBindings",
+                (args, o, bindings, p, k) =>
+                {
+                    ArgumentCountException.Check("PrintLocalBindings", 0, args);
+                    var locals = bindings.Frame.Locals;
+                    var output = new string[locals.Length * 4];
+                    var index = 0;
+                    foreach (var v in locals)
+                    {
+                        output[index++] = v.Name.Name;
+                        output[index++] = "=";
+                        output[index++] = Writer.TermToString(bindings.CopyTerm(v));
+                        output[index++] = TextUtilities.NewLineToken;
+                    }
+
+                    return k(o.Append(output), bindings.Unifications, bindings.State, p);
+                }),
+
+            ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",
+                (args, o, bindings, p, k) =>
+                {
+                    ArgumentCountException.Check("SampleOutputText", 0, args);
+                    var t = StepTask.CurrentStepTask;
+                    // Don't generate another sample if the last one hasn't been displayed yet.
+                    if (!t.NewSample)
+                    {
+                        t.Text = o.AsString;
+                        t.State = bindings.State;
+                        t.NewSample = true;
+                    }
+
+                    return k(o, bindings.Unifications, bindings.State, p);
+                }),
+
+            ["EmptyCallSummary"] = new GeneralPredicate<Dictionary<CompoundTask, int>>("EmptyCallSummary",
+                _ => false,
+                () => new[] {new Dictionary<CompoundTask, int>()}
+            ),
+
+            ["NoteCalledTasks"] = new GeneralPrimitive("NoteCalledTasks",
+                (args, output, env, predecessor, k) =>
+                {
+                    ArgumentCountException.Check("NoteCalledTasks", 1, args);
+                    var callSummary =
+                        ArgumentTypeException.Cast<Dictionary<CompoundTask, int>>("NoteCalledTasks", args[0], args);
+                    foreach (var frame in predecessor.GoalChain)
+                    {
+                        var task = frame.Method.Task;
+                        callSummary.TryGetValue(task, out var previousCount);
+                        callSummary[task] = previousCount + 1;
+                    }
+
+                    return k(output, env.Unifications, env.State, predecessor);
+                }),
+
+            ["Pause"] = new GeneralPrimitive("Pause", (args, o, bindings, p, k) =>
+            {
+                ArgumentCountException.Check("Pause", 0, args);
+                var t = StepTask.CurrentStepTask;
+                t.Text = o.AsString;
+                t.State = bindings.State;
+                t.Pause(t.SingleStep);
+                return k(o, bindings.Unifications, bindings.State, p);
+            }),
+
+            ["Break"] = new GeneralPrimitive("Break", (args, o, bindings, p, k) =>
+            {
+                var t = StepTask.CurrentStepTask;
+                if (args.Length > 0)
+                    t.BreakMessage = ((string[]) args[0]).Untokenize();
+                t.Text = o.AsString;
+                t.State = bindings.State;
+                t.Pause(true);
+                t.BreakMessage = null;
+                return k(o, bindings.Unifications, bindings.State, p);
+            }),
+
+            ["ClearOutput"] = new GeneralPrimitive("ClearOutput",
+                // ReSharper disable once UnusedParameter.Local
+                (args, o, bindings, p, k) =>
+                    k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p)),
+
+            ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
+                (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})
+        };
+
+        ReplUtilities.AddDefinitions(
+            "predicate TestCase ?code.",
+            "RunTestCases: [ForEach [TestCase ?call] [RunTestCase ?call]] All tests passed!",
+            "RunTestCase ?call: Running ?call ... [Paragraph] [SampleOutputText] [Call ?call] [SampleOutputText]",
+            "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
+            "Sample ?task ?testCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText] [= ?attempt ?testCount]",
+            "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
+            "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Write \"<pos=400>\"] [DisplayCallCount ?s ?t ?count] [NewLine]]",
+            "DisplayCallCount ?s ?t ?count: [?s ?t ?value] [set ?average = ?value/?count] [Write ?average]",
+            "Uncalled ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Not [?s ?t ?value]] [Write ?t] [NewLine]]",
+            "predicate HotKey ?key ?doc ?implementation.",
+            "RunHotKey ?key: [firstOf] [HotKey ?key ? ?code] [else] [= ?code [UndefinedHotKey ?key]] [end] [firstOf] [Call ?code] [else] Command failed: ?code/Write [end]",
+            "UndefinedHotKey ?key: ?key/Write is not a defined hot key.",
+            "ShowHotKeys: <b>Key <indent=100> Function </indent></b> [NewLine] [ForEach [HotKey ?key ?doc ?] [WriteHotKeyDocs ?key ?doc]]",
+            "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]"
+        );
+
+        Autograder.AddBuiltins();
     }
 
     private void EnsureProjectDirectory()
@@ -229,6 +229,7 @@ public class Repl
     {
         try
         {
+            // Get rid of any HoteKey bindings from before
             if (ReplUtilities["HotKey"] is CompoundTask hotKey)
             {
                 hotKey.Methods.Clear();
@@ -241,12 +242,19 @@ public class Repl
                 FormattingOptions = {ParagraphMarker = "\n\n", LineSeparator = "<br>"}
             };
 
-            if (string.IsNullOrEmpty(ProjectPath))
+            string startUpProject = null;
+#if UNITY_STANDALONE
+            var startUp = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Startup");
+            if (Directory.Exists(startUp))
+                startUpProject = startUp;
+#endif
+
+            if (startUpProject == null && string.IsNullOrEmpty(ProjectPath))
                 DebugText =
                     "<color=red>No project selected.  Use \"project <i>projectName</i>\" to select your project directory.</color>";
             else
             {
-                ProjectModule.LoadDirectory(ProjectPath, true);
+                ProjectModule.LoadDirectory(startUpProject??ProjectPath, true);
                 DeclareMainIfDefined("HotKey", "Author", "Description");
                 var warnings = ProjectModule.Warnings().ToArray();
                 DebugText = warnings.Length == 0
@@ -259,8 +267,6 @@ public class Repl
         {
             DebugText = $"<color=red>{e.Message}</color>";
         }
-
-        //Command.Select();
     }
 
     private void ShowHelp(bool showCommandKeys = true)

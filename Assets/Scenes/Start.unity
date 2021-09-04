@@ -705,8 +705,6 @@ MonoBehaviour:
   OutputText: {fileID: 2098888329}
   Command: {fileID: 1892627517}
   DebugOutput: {fileID: 850212047}
-  ImageController: {fileID: 869651590}
-  SoundController: {fileID: 256771933}
 --- !u!1 &733484034
 GameObject:
   m_ObjectHideFlags: 0

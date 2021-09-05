@@ -2177,14 +2177,19 @@
             </summary>
             <returns>New dynamic state</returns>
         </member>
+        <member name="P:Step.State.Item(Step.Interpreter.StateElement)">
+            <summary>
+            The value of the specified dynamic state element
+            </summary>
+        </member>
         <member name="M:Step.State.Lookup(Step.Interpreter.StateElement)">
             <summary>
-            Returns the value of the specified dynamic state element
+            The value of the specified dynamic state element
             </summary>
         </member>
         <member name="M:Step.State.LookupOrDefault(Step.Interpreter.StateElement,System.Object)">
             <summary>
-            Returns the value of the specified dynamic state element or the specified default value, if the state element
+            The value of the specified dynamic state element or the specified default value, if the state element
             has no value.
             </summary>
         </member>
@@ -2532,12 +2537,29 @@
             <returns>The task</returns>
             <exception cref="T:System.ArgumentException">If variable is defined but isn't a CompoundTask</exception>
         </member>
+        <member name="M:Step.Module.Eval(Step.State,System.Object[])">
+            <summary>
+            Run the call in the specified tuple.
+            </summary>
+            <param name="state">State in which to run the code</param>
+            <param name="call">Tuple representing the task to call and its arguments</param>
+            <exception cref="T:System.ArgumentException">If first element of call is not a task</exception>
+        </member>
         <member name="M:Step.Module.Call(Step.State,System.String,System.Object[])">
             <summary>
             Calls the named task with the specified arguments and returns the text it generates
             </summary>
             <param name="state">Global variable bindings to use in the call, if any.</param>
             <param name="taskName">Name of the task</param>
+            <param name="args">Arguments to task, if any</param>
+            <returns>Generated text as one big string, and final values of global variables.  Or null if the task failed.</returns>
+        </member>
+        <member name="M:Step.Module.Call(Step.State,Step.Interpreter.Task,System.Object[])">
+            <summary>
+            Calls the named task with the specified arguments and returns the text it generates
+            </summary>
+            <param name="state">Global variable bindings to use in the call, if any.</param>
+            <param name="task">Task to call</param>
             <param name="args">Arguments to task, if any</param>
             <returns>Generated text as one big string, and final values of global variables.  Or null if the task failed.</returns>
         </member>

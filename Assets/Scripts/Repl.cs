@@ -11,11 +11,15 @@ using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
 using TMPro;
+using UnityEngine.UI;
 
 [UsedImplicitly]
 public class Repl
     : MonoBehaviour
 {
+    public Transform ButtonBarContent;
+    public GameObject ButtonPrefab;
+
     public static Repl CurrentRepl { get; private set; }
 
 
@@ -193,7 +197,7 @@ public class Repl
                     k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p)),
 
             ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
-                (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})
+                (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"}),
         };
 
         ReplUtilities.AddDefinitions(
@@ -210,7 +214,9 @@ public class Repl
             "RunHotKey ?key: [firstOf] [HotKey ?key ? ?code] [else] [= ?code [UndefinedHotKey ?key]] [end] [firstOf] [Call ?code] [else] Command failed: ?code/Write [end]",
             "UndefinedHotKey ?key: ?key/Write is not a defined hot key.",
             "ShowHotKeys: <b>Key <indent=100> Function </indent></b> [NewLine] [ForEach [HotKey ?key ?doc ?] [WriteHotKeyDocs ?key ?doc]]",
-            "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]"
+            "WriteHotKeyDocs ?k ?d: Alt- ?k/Write <indent=100> ?d/Write </indent> [NewLine]",
+            "[main] predicate Button ?label ?code.",
+            "FindAllButtons ?buttonList: [FindAll [?label ?code] [Button ?label ?code] ?buttonList]"
         );
 
         Autograder.AddBuiltins();
@@ -229,14 +235,25 @@ public class Repl
     {
         try
         {
-            // Get rid of any HoteKey bindings from before
+            if (ButtonBarContent != null)
+                ClearButtonBar();
+
+            // Get rid of any HotKey bindings from before
             if (ReplUtilities["HotKey"] is CompoundTask hotKey)
             {
                 hotKey.Methods.Clear();
                 // Make sure it gets executed as a predicate
                 hotKey.Declare(CompoundTask.TaskFlags.Fallible | CompoundTask.TaskFlags.MultipleSolutions);
             }
-            
+
+            // Get rid of any Button bindings
+            if (ReplUtilities["Button"] is CompoundTask button)
+            {
+                button.Methods.Clear();
+                // Make sure it gets executed as a predicate
+                button.Declare(CompoundTask.TaskFlags.Fallible | CompoundTask.TaskFlags.MultipleSolutions);
+            }
+
             ProjectModule = new Module("main", ReplUtilities)
             {
                 FormattingOptions = {ParagraphMarker = "\n\n", LineSeparator = "<br>"}
@@ -244,7 +261,7 @@ public class Repl
 
             string startUpProject = null;
 #if UNITY_STANDALONE
-            var startUp = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Startup");
+            var startUp = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? throw new InvalidOperationException("Parent directory is null"), "Startup");
             if (Directory.Exists(startUp))
                 startUpProject = startUp;
 #endif
@@ -267,6 +284,46 @@ public class Repl
         {
             DebugText = $"<color=red>{e.Message}</color>";
         }
+
+        // Generate the buttons
+        var buttonSpecs = ProjectModule.CallFunction<object[]>("FindAllButtons");
+        foreach (object[] spec in buttonSpecs)
+        {
+            var label = spec[0] as string[];
+            if (label == null)
+            {
+                if (spec[0] is object[] objectArray)
+                    label = objectArray.Cast<string>().ToArray();
+                else
+                    throw new ArgumentException($"Label on button is not text: {Writer.TermToString(spec[0])}");
+            }
+
+            var stringLabel = label.Untokenize();
+            var code = spec[1] as object[];
+            if (code == null)
+                throw new ArgumentException(
+                    $"Invalid code {Writer.TermToString(spec[1])} to run for button {stringLabel}");
+            AddButton(stringLabel, code);
+        }
+    }
+
+    private void ClearButtonBar()
+    {
+        for (var i = ButtonBarContent.childCount-1; i >= 0; i--)
+            Destroy(ButtonBarContent.GetChild(i).gameObject);
+    }
+
+    private void AddButton(string label, object[] call)
+    {
+        if (call.Length == 0)
+            throw new ArgumentException($"Expression to run in button {label} is the empty tuple");
+        if (!(call[0] is Task task))
+            throw new ArgumentException($"Task to call for button {label} is not a task: {call[0]}");
+        var button = Instantiate(ButtonPrefab, ButtonBarContent);
+        button.name = label;
+        button.GetComponentInChildren<TMP_Text>().text = label;
+        var callback = MakeCallBack(task, call.Skip(1).ToArray());
+        button.GetComponentInChildren<Button>().onClick.AddListener(() => { callback.Invoke(); });
     }
 
     private void ShowHelp(bool showCommandKeys = true)

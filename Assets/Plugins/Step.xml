@@ -1127,11 +1127,6 @@
             The only (?) use case for this is when you want to forcibly generate multiple solutions
             </summary>
         </member>
-        <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutions(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
-            <summary>
-            Find all solutions to the specified task and arguments.  Return a list of the arglists for each solution.
-            </summary>
-        </member>
         <member name="M:Step.Interpreter.HigherOrderBuiltins.AllSolutionText(System.String,System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame)">
             <summary>
             Find all solutions to the specified task and arguments.  Return a list of the text outputs of each solution.

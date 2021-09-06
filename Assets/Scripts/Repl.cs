@@ -261,7 +261,11 @@ public class Repl
 
             string startUpProject = null;
 #if UNITY_STANDALONE
+#if UNITY_STANDALONE_OSX
+            var startUp = Path.Combine(Application.dataPath, "Startup");
+#else
             var startUp = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? throw new InvalidOperationException("Parent directory is null"), "Startup");
+#endif
             if (Directory.Exists(startUp))
                 startUpProject = startUp;
 #endif

@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
 using TMPro;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 [UsedImplicitly]
@@ -102,12 +103,15 @@ public class Repl
     void Start()
     {
         CurrentRepl = this;
+        ContinueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
+        DisableContinue();
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
         Module.RichTextStackTraces = true;
         EnsureProjectDirectory();
 
         ReloadStepCode();
+
     }
 
     private static void MakeUtilitiesModule()
@@ -313,8 +317,12 @@ public class Repl
 
     private void ClearButtonBar()
     {
-        for (var i = ButtonBarContent.childCount-1; i >= 0; i--)
-            Destroy(ButtonBarContent.GetChild(i).gameObject);
+        for (var i = ButtonBarContent.childCount - 1; i >= 0; i--)
+        {
+            var button = ButtonBarContent.GetChild(i).gameObject;
+            if (button != ContinueButton)
+                Destroy(button);
+        }
     }
 
     private void AddButton(string label, object[] call)
@@ -323,12 +331,24 @@ public class Repl
             throw new ArgumentException($"Expression to run in button {label} is the empty tuple");
         if (!(call[0] is Task task))
             throw new ArgumentException($"Task to call for button {label} is not a task: {call[0]}");
+        var callback = MakeCallBack(task, call.Skip(1).ToArray());
+        AddButton(label, () => { callback.Invoke(); });
+    }
+
+    private GameObject AddButton(string label, UnityAction pressHandler)
+    {
         var button = Instantiate(ButtonPrefab, ButtonBarContent);
         button.name = label;
         button.GetComponentInChildren<TMP_Text>().text = label;
-        var callback = MakeCallBack(task, call.Skip(1).ToArray());
-        button.GetComponentInChildren<Button>().onClick.AddListener(() => { callback.Invoke(); });
+        button.GetComponentInChildren<Button>().onClick.AddListener(pressHandler);
+        return button;
     }
+
+    private GameObject ContinueButton;
+
+    private void DisableContinue() => ContinueButton.SetActive(false);
+    private void EnableContinue() => ContinueButton.SetActive(true);
+    
 
     private void ShowHelp(bool showCommandKeys = true)
     {
@@ -453,8 +473,11 @@ public class Repl
         StartCoroutine(StepTaskDriver(task));
     }
 
+    private bool continueTask;
+    
     IEnumerator StepTaskDriver(StepTask task)
     {
+        DisableContinue();
         var previouslyPaused = false;
         while (task.Active)
         {
@@ -502,6 +525,7 @@ public class Repl
                     OutputText.text = task.Text ?? "";
                     OutputText.caretPosition = task.Text.Length;
                     previouslyPaused = true;
+                    EnableContinue();
                 }
 
                 var f10 = Input.GetKeyDown(KeyCode.F10);
@@ -509,7 +533,7 @@ public class Repl
                 var f5 = Input.GetKeyDown(KeyCode.F5);
                 var shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
                 
-                if (f10 || f11 || f5)
+                if (continueTask || f10 || f11 || f5)
                 {
                     task.StepOverFrame = null;
                     if (f10 && task.TraceEvent != Module.MethodTraceEvent.Succeed)
@@ -522,6 +546,8 @@ public class Repl
                         DebugText = "";
                     task.Continue();
                     previouslyPaused = false;
+                    continueTask = false;
+                    DisableContinue();
                 }
             }
             else if (task.NewSample)
@@ -547,6 +573,7 @@ public class Repl
 
         CurrentTask = null;
         //Command.Select();
+        DisableContinue();
     }
 
     void AbortCurrentTask()
@@ -635,5 +662,10 @@ public class Repl
                     break;
             }
         }
+    }
+
+    private void ContinueTask()
+    {
+        continueTask = true;  // This gets noticed by StepTaskDriver and then cleared
     }
 }

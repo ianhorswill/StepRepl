@@ -10,6 +10,8 @@ using UnityEngine.Networking;
 
 public class SoundController : MonoBehaviour
 {
+    public static SoundController Singleton;
+    
     private static readonly string[] SoundFileExtensions = { ".mp3", ".ogg", ".wav" };
 
     static SoundController()
@@ -44,33 +46,31 @@ public class SoundController : MonoBehaviour
 
         Module.Global["PlaySound"] = new SimplePredicate<string>("PlaySound", path =>
         {
-            var soundController = FindObjectOfType<SoundController>();
             if (path == "nothing")
             {
-                soundController.SoundPath = null;
+                Singleton.SoundPath = null;
                 return true;
             }
 
             if (!File.Exists(path))
                 return false;
-            soundController.Loop = false;
-            soundController.SoundPath = path;
+            Singleton.Loop = false;
+            Singleton.SoundPath = path;
             return true;
         });
 
         Module.Global["PlaySoundLoop"] = new SimplePredicate<string>("PlaySound", path =>
         {
-            var soundController = FindObjectOfType<SoundController>();
             if (path == "nothing")
             {
-                soundController.SoundPath = null;
+                Singleton.SoundPath = null;
                 return true;
             }
 
             if (!File.Exists(path))
                 return false;
-            soundController.Loop = true;
-            soundController.SoundPath = path;
+            Singleton.Loop = true;
+            Singleton.SoundPath = path;
             return true;
         });
     }
@@ -96,6 +96,7 @@ public class SoundController : MonoBehaviour
     [UsedImplicitly]
     public void Start()
     {
+        Singleton = this;
         audioSource = GetComponent<AudioSource>();
         poll = StartCoroutine(PollPath());
         Repl.EnterDebug += StopSound;

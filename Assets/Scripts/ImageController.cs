@@ -9,6 +9,8 @@ using UnityEngine.UI;
 
 public class ImageController : MonoBehaviour
 {
+    public static ImageController Singleton;
+    
     private static readonly string[] ImageFileExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", "tiff" };
 
     static ImageController()
@@ -43,13 +45,13 @@ public class ImageController : MonoBehaviour
         {
             if (path == "nothing")
             {
-                FindObjectOfType<ImageController>().ImagePath = null;
+                Singleton.ImagePath = null;
                 return true;
             }
 
             if (!File.Exists(path))
                 return false;
-            FindObjectOfType<ImageController>().ImagePath = path;
+            Singleton.ImagePath = path;
             return true;
         });
 
@@ -75,6 +77,7 @@ public class ImageController : MonoBehaviour
     [UsedImplicitly]
     public void Start()
     {
+        Singleton = this;
         image = GetComponent<Image>();
         poll = StartCoroutine(PollPath());
         Repl.EnterDebug = EnterDebug;

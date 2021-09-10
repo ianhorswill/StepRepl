@@ -208,7 +208,7 @@ public class Repl
             "predicate TestCase ?code.",
             "RunTestCases: [ForEach [TestCase ?call] [RunTestCase ?call]] All tests passed!",
             "RunTestCase ?call: Running ?call ... [Paragraph] [SampleOutputText] [Call ?call] [SampleOutputText]",
-            "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
+            "Test ?task ?testCount: [CountAttempts ?attempt] Test: ?attempt/Write [Paragraph] [Once ?task] [SampleOutputText] [= ?attempt ?testCount]",
             "Sample ?task ?testCount ?sampling: [EmptyCallSummary ?sampling] [CountAttempts ?attempt] Test: ?attempt [Paragraph] [Once ?task] [NoteCalledTasks ?sampling] [SampleOutputText] [= ?attempt ?testCount]",
             "Debug ?task: [Break \"Press F10 to run one step, F5 to finish execution without stopping.\"] [begin ?task]",
             "CallCounts ?task ?subTaskPredicate ?count: [IgnoreOutput [Sample ?task ?count ?s]] [ForEach [?subTaskPredicate ?t] [Write ?t] [Write \"<pos=400>\"] [DisplayCallCount ?s ?t ?count] [NewLine]]",

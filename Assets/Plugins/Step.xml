@@ -618,6 +618,11 @@
         <member name="M:Step.Interpreter.Task.ToString">
             <inheritdoc />
         </member>
+        <member name="T:Step.Interpreter.IVariableName">
+            <summary>
+            Base class of objects that name both local variables and global variables
+            </summary>
+        </member>
         <member name="T:Step.Interpreter.FunctionalExpressionParser">
             <summary>
             Parser for arithmetic/functional expressions used in set commands.
@@ -1347,9 +1352,6 @@
             holding this variable's value.
             </summary>
         </member>
-        <member name="M:Step.Interpreter.LocalVariableName.#ctor(System.String,System.Int32)">
-            <inheritdoc />
-        </member>
         <member name="M:Step.Interpreter.LocalVariableName.ToString">
             <inheritdoc />
         </member>
@@ -1991,20 +1993,20 @@
             If we're looking at a mention expression (?x, ?x/Foo, ?x/Foo/Bar, etc.), compile it.
             </summary>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.ReadComplexMentionExpression(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.LocalVariableName)">
+        <member name="M:Step.Parser.DefinitionStream.ReadComplexMentionExpression(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.IVariableName)">
             <summary>
             Read an expression of the form ?local/STUFF
             Called after ?local has already been read.
             </summary>
             <param name="chain">Chain to add to</param>
-            <param name="local">The variable before the /</param>
+            <param name="variable">The variable before the /</param>
         </member>
-        <member name="M:Step.Parser.DefinitionStream.ReadMentionExpressionTail(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.LocalVariableName,System.Object)">
+        <member name="M:Step.Parser.DefinitionStream.ReadMentionExpressionTail(Step.Interpreter.Step.ChainBuilder,Step.Interpreter.IVariableName,System.Object)">
             <summary>
             Called after the last "/" of a complex mention expression.
             </summary>
             <param name="chain">Chain to add to</param>
-            <param name="local">Result of the expression from before the last "/"</param>
+            <param name="variable">Result of the expression from before the last "/"</param>
             <param name="targetVar">Task to call on local</param>
         </member>
         <member name="M:Step.Parser.DefinitionStream.TryProcessTextBlock(Step.Interpreter.Step.ChainBuilder)">

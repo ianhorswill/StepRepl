@@ -12,6 +12,7 @@ using Step.Interpreter;
 using Step.Utilities;
 using TMPro;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [UsedImplicitly]
@@ -22,7 +23,6 @@ public class Repl
     public GameObject ButtonPrefab;
 
     public static Repl CurrentRepl { get; private set; }
-
 
     public static bool RetainState;
     public static State ExecutionState = State.Empty;
@@ -76,7 +76,9 @@ public class Repl
 
     public bool TaskActive => CurrentTask != null && CurrentTask.Active;
 
-    public TMP_InputField OutputText;
+    public TextMeshProUGUI OutputText;
+    public LinkHandler OutputLinkHandler;
+
     public TMP_InputField Command;
     public TMP_InputField DebugOutput;
 
@@ -202,6 +204,29 @@ public class Repl
 
             ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
                 (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"}),
+
+            ["Link"] = new GeneralPrimitive("Link",
+                (args, o, e, p, k) =>
+                {
+                    var repl = Repl.CurrentRepl;
+                    ArgumentCountException.Check("Link", 1, args);
+                    var code = ArgumentTypeException.Cast<object[]>("Link", args[0], args);
+                    if (code.Length == 0)
+                        throw new ArgumentException("[] is not a valid task call for a link");
+                    var task = code[0] as Task;
+                    if (task == null)
+                        throw new ArgumentException($"{code[0]} is not a value task to call in a link");
+                    var state = e.State;
+                    var callback = repl.MakeCallBack(e.Module, () => state, task, code.Skip(1).ToArray());
+                    var link = repl.OutputLinkHandler.RegisterLink(callback);
+                    var linkToken = $"<link=\"{link}\">";
+                    if (k(o.Append(new []{ linkToken}), e.Unifications, e.State, p))
+                        return true;
+                    repl.OutputLinkHandler.DeregisterLink(link);
+                    return false;
+                }),
+
+            ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" })
         };
 
         ReplUtilities.AddDefinitions(
@@ -523,7 +548,7 @@ public class Repl
                     DebugText = task.ShowStackRequested ?  $"{breakMessage}{Module.StackTrace(bindings)}" : "";
 
                     OutputText.text = task.Text ?? "";
-                    OutputText.caretPosition = task.Text.Length;
+                    //OutputText.caretPosition = task.Text.Length;
                     previouslyPaused = true;
                     EnableContinue();
                 }
@@ -612,54 +637,59 @@ public class Repl
     void OnGUI()
     {
         var e = Event.current;
-        if (e.type == EventType.KeyDown)
+        switch (e.type)
         {
-            var keyCode = e.keyCode;
-            switch (keyCode)
+            case EventType.KeyDown:
             {
-                case KeyCode.Escape:
-                    AbortCurrentTask();
-                    break;
-
-                case KeyCode.Pause:
-                case KeyCode.Break:
-                    if (CurrentTask != null)
-                    {
-                        CurrentTask.StepOverFrame = null;
-                        CurrentTask.SingleStep = true;
-                    }
-                    break;
-
-                case KeyCode.R:
-                    if (e.control)
-                    {
+                var keyCode = e.keyCode;
+                switch (keyCode)
+                {
+                    case KeyCode.Escape:
                         AbortCurrentTask();
-                        ReloadStepCode();
-                        DebugText = "Files reloaded\n\n" + DebugText;
-                        //Command.Select();
-                    }
+                        break;
 
-                    break;
+                    case KeyCode.Pause:
+                    case KeyCode.Break:
+                        if (CurrentTask != null)
+                        {
+                            CurrentTask.StepOverFrame = null;
+                            CurrentTask.SingleStep = true;
+                        }
+                        break;
 
-                case KeyCode.F1:
-                case KeyCode.Help:
-                    ShowHelp();
-                    break;
+                    case KeyCode.R:
+                        if (e.control)
+                        {
+                            AbortCurrentTask();
+                            ReloadStepCode();
+                            DebugText = "Files reloaded\n\n" + DebugText;
+                            //Command.Select();
+                        }
 
-                case KeyCode.F4:
-                    ShowState();
-                    break;
+                        break;
 
-                case KeyCode.None:
-                    break;
+                    case KeyCode.F1:
+                    case KeyCode.Help:
+                        ShowHelp();
+                        break;
 
-                default:
-                    if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
-                    {
-                        DebugText = "";
-                        RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
-                    }
-                    break;
+                    case KeyCode.F4:
+                        ShowState();
+                        break;
+
+                    case KeyCode.None:
+                        break;
+
+                    default:
+                        if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
+                        {
+                            DebugText = "";
+                            RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
+                        }
+                        break;
+                }
+
+                break;
             }
         }
     }

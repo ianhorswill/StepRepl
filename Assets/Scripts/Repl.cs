@@ -86,7 +86,7 @@ public class Repl
 
     public bool TaskActive => CurrentTask != null && CurrentTask.Active;
 
-    public TextMeshProUGUI OutputText;
+    public TMP_InputField OutputText;
     public LinkHandler OutputLinkHandler;
 
     public TMP_InputField Command;
@@ -684,16 +684,17 @@ public class Repl
                             CurrentTask.StepOverFrame = null;
                             CurrentTask.SingleStep = true;
                         }
+
                         break;
 
-                case KeyCode.R:
-                    if (e.control)
-                    {
-                        AbortCurrentTask();
-                        ReloadStepCode();
-                        DebugText = "Files reloaded\n\n" + DebugText;
-                        SelectCommandBox();
-                    }
+                    case KeyCode.R:
+                        if (e.control)
+                        {
+                            AbortCurrentTask();
+                            ReloadStepCode();
+                            DebugText = "Files reloaded\n\n" + DebugText;
+                            SelectCommandBox();
+                        }
 
                         break;
 
@@ -709,19 +710,22 @@ public class Repl
                     case KeyCode.None:
                         break;
 
-                case KeyCode.UpArrow:
-                    if (e.control)
-                        Command.text = lastCommand;
-                    break;
+                    case KeyCode.UpArrow:
+                        if (e.control)
+                            Command.text = lastCommand;
+                        break;
 
-                default:
-                    if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
-                    {
-                        DebugText = "";
-                        RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
-                    }
-                    break;
+                    default:
+                        if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
+                        {
+                            DebugText = "";
+                            RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
+                        }
+
+                        break;
+                }
             }
+                break;
         }
     }
 

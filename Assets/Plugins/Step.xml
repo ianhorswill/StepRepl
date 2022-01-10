@@ -566,6 +566,57 @@
         <member name="M:Step.Interpreter.SimplePredicate`2.Call(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
             <inheritdoc />
         </member>
+        <member name="T:Step.Interpreter.SimplePredicate`3">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`3.#ctor(System.String,System.Func{`0,`1,`2,System.Boolean})">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+            <param name="name">Name of the predicate</param>
+            <param name="implementation">Low-level implementation of the predicate</param>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`3.Call(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.SimplePredicate`4">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`4.#ctor(System.String,System.Func{`0,`1,`2,`3,System.Boolean})">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+            <param name="name">Name of the predicate</param>
+            <param name="implementation">Low-level implementation of the predicate</param>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`4.Call(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+            <inheritdoc />
+        </member>
+        <member name="T:Step.Interpreter.SimplePredicate`5">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`5.#ctor(System.String,System.Func{`0,`1,`2,`3,`4,System.Boolean})">
+            <summary>
+            A primitive task that implements a deterministic function from arguments to a boolean
+            Requires all arguments to be instantiated
+            </summary>
+            <param name="name">Name of the predicate</param>
+            <param name="implementation">Low-level implementation of the predicate</param>
+        </member>
+        <member name="M:Step.Interpreter.SimplePredicate`5.Call(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+            <inheritdoc />
+        </member>
         <member name="T:Step.Interpreter.SimpleNAryPredicate">
             <summary>
             A primitive task that implements a deterministic function from arguments to a boolean

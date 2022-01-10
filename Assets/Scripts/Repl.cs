@@ -7,17 +7,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Assets.SION;
 using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
 using TMPro;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [UsedImplicitly]
 public class Repl
     : MonoBehaviour
 {
+    public float PointSize = 24;
     public Transform ButtonBarContent;
     public GameObject ButtonPrefab;
 
@@ -64,6 +67,14 @@ public class Repl
         ,
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GitHub")
     };
+
+    public void SetPointSize(float size)
+    {
+        OutputText.pointSize = size;
+        Command.pointSize = size;
+        DebugOutput.pointSize = size;
+    }
+    
     
     public string ProjectPath
     {
@@ -85,8 +96,7 @@ public class Repl
         get => DebugOutput.text;
         set
         {
-            if (EnterDebug != null)
-                EnterDebug();
+            EnterDebug?.Invoke();
             DebugOutput.text = value;
         }
     }
@@ -102,6 +112,7 @@ public class Repl
     [UsedImplicitly]
     void Start()
     {
+        SetPointSize(PointSize);
         CurrentRepl = this;
         ContinueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
         DisableContinue();
@@ -111,7 +122,17 @@ public class Repl
         EnsureProjectDirectory();
 
         ReloadStepCode();
+        SelectCommandBox();
+    }
 
+    private void SelectCommandBox()
+    {
+        var e = EventSystem.current;
+        if (e.alreadySelecting)
+            return;
+        
+        e.SetSelectedGameObject(Command.gameObject);
+        Command.ActivateInputField();
     }
 
     private static void MakeUtilitiesModule()
@@ -129,7 +150,8 @@ public class Repl
                     {
                         output[index++] = v.Name.Name;
                         output[index++] = "=";
-                        output[index++] = Writer.TermToString(bindings.CopyTerm(v));
+                        var value = bindings.CopyTerm(v);
+                        output[index++] = Writer.TermToString(value); //+$":{value.GetType().Name}";
                         output[index++] = TextUtilities.NewLineToken;
                     }
 
@@ -224,6 +246,7 @@ public class Repl
         );
 
         Autograder.AddBuiltins();
+        SIONPrimitives.AddBuiltins(ReplUtilities);
     }
 
     private void EnsureProjectDirectory()
@@ -290,7 +313,7 @@ public class Repl
         }
         catch (Exception e)
         {
-            DebugText = $"<color=red>{e.Message}</color>";
+            DebugText = $"<color=red><b>{e.Message}</b></color>\n\n{Module.StackTrace()}\n\n<color=#808080>Funky internal debugging stuff for Ian:\n{e.StackTrace}</color>";
         }
 
         // Generate the buttons
@@ -346,9 +369,18 @@ public class Repl
 
     private GameObject ContinueButton;
 
-    private void DisableContinue() => ContinueButton.SetActive(false);
-    private void EnableContinue() => ContinueButton.SetActive(true);
-    
+    private void DisableContinue()
+    {
+        ContinueButton.SetActive(false);
+        LayoutRebuilder.MarkLayoutForRebuild((RectTransform)Command.transform.parent.transform);
+    }
+
+    private void EnableContinue()
+    {
+        ContinueButton.SetActive(true);
+        LayoutRebuilder.MarkLayoutForRebuild((RectTransform)Command.transform.parent.transform);
+    }
+
 
     private void ShowHelp(bool showCommandKeys = true)
     {
@@ -364,7 +396,7 @@ public class Repl
 
         if (showCommandKeys)
             DebugText =
-                "<size=24><b>System command keys\n\nKey\t\tFunction</b>\nESC\t\tAbort running command\nPause\tInterrupt running command\nControl-R\tReload Step code\nF1\t\tHelp\nF4\t\tShow global state\nF5\t\tContinue execution\nF10\t\tStep over\nF11\t\tStep into\nShift-F11\tStep out</size>";
+                "<b>System command keys\n\nKey\t\tFunction</b>\nESC\t\tAbort running command\nPause\tInterrupt running command\nControl-R\tReload Step code\nF1\t\tHelp\nF4\t\tShow global state\nF5\t\tContinue execution\nF10\t\tStep over\nF11\t\tStep into\nShift-F11\tStep out";
     }
 
     private void DeclareMainIfDefined(params string[] tasks)
@@ -425,21 +457,18 @@ public class Repl
             ProjectPath = path;
             ReloadStepCode();
             Command.text = "";
-            //Command.Select();
-            
         }
         else
             switch (command)
             {
                 case "":
-                    //Command.Select();
+                    SelectCommandBox();
                     break;
 
                 case "reload":
                     ReloadStepCode();
                     OutputText.text = "";
                     DebugText = "Files reloaded\n\n"+DebugText;
-                    //Command.Select();
                     Command.text = "";
                     break;
 
@@ -460,6 +489,7 @@ public class Repl
                     break;
                 }
             }
+        SelectCommandBox();
     }
 
     public void RunStepCode(Module module, State state, Task task, params object[] args)
@@ -572,8 +602,8 @@ public class Repl
         }
 
         CurrentTask = null;
-        //Command.Select();
         DisableContinue();
+        //SelectCommandBox();
     }
 
     void AbortCurrentTask()
@@ -636,7 +666,7 @@ public class Repl
                         AbortCurrentTask();
                         ReloadStepCode();
                         DebugText = "Files reloaded\n\n" + DebugText;
-                        //Command.Select();
+                        SelectCommandBox();
                     }
 
                     break;
@@ -651,6 +681,11 @@ public class Repl
                     break;
 
                 case KeyCode.None:
+                    break;
+
+                case KeyCode.UpArrow:
+                    if (e.control)
+                        Command.text = lastCommand;
                     break;
 
                 default:

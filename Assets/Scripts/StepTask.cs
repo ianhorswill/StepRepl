@@ -11,6 +11,7 @@ public class StepTask
     [ThreadStatic] public static StepTask CurrentStepTask;
 
     private ThreadState ThreadState => thread.ThreadState;
+
     public string Text { get; set; }
 
     public BindingEnvironment Environment { get; private set; }

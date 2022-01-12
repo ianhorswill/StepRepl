@@ -35,25 +35,28 @@ namespace Assets.SION
             //    new SimpleFunction<IEnumerable<Hashtable>, string, IEnumerable<Hashtable>>("EntitiesOfType",
             //        (entities, t) => entities.Where(e => e["type"].Equals(t)).ToList());
 
-            m["DefineEntityType"] = new SimplePredicate<string[], string, string, Hashtable>(
+            m["DefineEntityType"] = new SimplePredicate<string[], string, Hashtable>(
                 "DefineEntityType",
-                (tokens, template, dataField, database) =>
+                (tokens, dataField, database) =>
                 {
                     var name = tokens[0];
-                    var t = new EntityType(name, template, dataField, database);
+                    var t = new EntityType(name, dataField, database);
                     m[name] = t.TypePredicate;
                     m[name + "Type"] = t;
                     m[name + "Index"] = t.ReferencePredicate;
                     return true;
                 });
 
-            m["TranslateEnumeration"] = new SimplePredicate<EntityType, string, string, object[]>(
+            m["TranslateEnumeration"] = new SimplePredicate<EntityType, string, string, object[], int>(
                 nameof(TranslateEnumeration),
-                (entities, attribute, newName, translation) =>
+                (entities, attribute, newName, translation, divisor) =>
                 {
-                    TranslateEnumeration(entities, attribute, newName, translation);
+                    TranslateEnumeration(entities, attribute, newName, translation, divisor);
                     return true;
                 });
+
+            m[nameof(TranslateRelationshipTypes)] =
+                new SimplePredicate<ArrayList>(nameof(TranslateRelationshipTypes), TranslateRelationshipTypes);
 
             m["DeprefixTraitList"] = new SimplePredicate<EntityType, string, string, string>(
                 nameof(TranslateEnumeration),
@@ -160,12 +163,12 @@ namespace Assets.SION
         //    Walk(database, 0);
         //}
         
-        private static void TranslateEnumeration(EntityType t, string oldName, string newName, object[] values)
+        private static void TranslateEnumeration(EntityType t, string oldName, string newName, object[] values, int divisor)
         {
             foreach (var e in t.Entities)
             {
                 var index = (int) e[oldName];
-                e[newName] = values[index];
+                e[newName] = values[index/divisor];
                 if (oldName != newName)
                     e.Remove(oldName);
             }
@@ -216,5 +219,20 @@ namespace Assets.SION
 
             return index;
         }
+
+        private static string[] relNames =
+        {
+            "self", "spouse", "child", "mother", "father", "sibling", "mother_sib", "father_sib", "sib_child", "cousin",
+            "acquaintance"
+        };
+
+        private static bool TranslateRelationshipTypes(ArrayList rels)
+        {
+            foreach (Hashtable relSet in rels)
+            foreach (Hashtable rel in (ArrayList) relSet["data"])
+                rel["type"] = relNames[((int) rel["type"]) / 10];
+            return true;
+        }
+
     }
 }

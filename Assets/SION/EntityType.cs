@@ -10,34 +10,37 @@ namespace Assets.SION
         public const string TypeTagName = "type";
         
         public readonly string Name;
-        public readonly string TemplateName;
+        public readonly string DataName;
         
         public readonly List<Hashtable> Entities = new List<Hashtable>();
         public readonly Dictionary<string, Hashtable> IdToEntity = new Dictionary<string, Hashtable>();
         public readonly Dictionary<Hashtable, string> EntityToId = new Dictionary<Hashtable, string>();
 
-        public EntityType(string name, string templateName, string dataField, Hashtable database)
+        public EntityType(string name, string dataField, Hashtable database)
         {
             Name = name;
-            TemplateName = templateName;
+            DataName = dataField;
 
             // ReSharper disable once StringLiteralTypo
             foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, "entityman", "entities"))
             {
-                if (entityWrapper["tmpl"].Equals(templateName))
+                var payload = (Hashtable) entityWrapper["data"];
+                if (payload.ContainsKey(dataField))
                 {
-                    var payload = (Hashtable) entityWrapper["data"];
                     var entity = (Hashtable) payload[dataField];
                     var idString = SIONPrimitives.GetPath<string>(payload, "ident", "id");
                     Entities.Add(entity);
                     IdToEntity[idString] = entity;
                     EntityToId[entity] = idString;
-                    entity[TypeTagName] = templateName;
+                    entity[TypeTagName] = dataField;
+                    // ReSharper disable StringLiteralTypo
+                    entity["tmpl"] = entityWrapper["tmpl"];
+                    // ReSharper restore StringLiteralTypo
                 }
             }
         }
 
-        public bool IsMember(Hashtable entity) => entity[TypeTagName].Equals(TemplateName);
+        public bool IsMember(Hashtable entity) => entity[TypeTagName].Equals(DataName);
 
         // The Step predicate Type(?x).  This works in both in and out modes
         public GeneralPredicate<object> TypePredicate => new GeneralPredicate<object>(Name,

@@ -16,28 +16,50 @@ namespace Assets.SION
         public readonly Dictionary<string, Hashtable> IdToEntity = new Dictionary<string, Hashtable>();
         public readonly Dictionary<Hashtable, string> EntityToId = new Dictionary<Hashtable, string>();
 
+        // ReSharper disable once StringLiteralTypo
+        private static readonly string[] entityPath = new[] {"entityman", "entities"};
+
+        private static readonly string[] playerPath = new[] {"players", "data", "players"};
+
         public EntityType(string name, string dataField, Hashtable database)
         {
             Name = name;
             DataName = dataField;
 
-            // ReSharper disable once StringLiteralTypo
-            foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, "entityman", "entities"))
-            {
-                var payload = (Hashtable) entityWrapper["data"];
-                if (payload.ContainsKey(dataField))
+            if (dataField == "player")
+                foreach (Hashtable entity in SIONPrimitives.GetPath<ArrayList>(database, playerPath))
                 {
-                    var entity = (Hashtable) payload[dataField];
-                    var idString = SIONPrimitives.GetPath<string>(payload, "ident", "id");
-                    Entities.Add(entity);
-                    IdToEntity[idString] = entity;
-                    EntityToId[entity] = idString;
-                    entity[TypeTagName] = dataField;
-                    // ReSharper disable StringLiteralTypo
-                    entity["tmpl"] = entityWrapper["tmpl"];
-                    // ReSharper restore StringLiteralTypo
+                    var idString = (string) entity["pid"];
+                    if (idString != null)
+                    {
+                        Entities.Add(entity);
+                        IdToEntity[idString] = entity;
+                        EntityToId[entity] = idString;
+                    }
                 }
-            }
+            else
+                foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, entityPath))
+                {
+                    var payload = (Hashtable) entityWrapper["data"];
+                    if (payload.ContainsKey(dataField))
+                    {
+                        var entity = (Hashtable) payload[dataField];
+                        var idString = SIONPrimitives.GetPath<string>(payload, "ident", "id");
+                        Entities.Add(entity);
+                        IdToEntity[idString] = entity;
+                        EntityToId[entity] = idString;
+                        entity[TypeTagName] = dataField;
+                        // ReSharper disable StringLiteralTypo
+                        entity["tmpl"] = entityWrapper["tmpl"];
+                        // ReSharper restore StringLiteralTypo
+                        if (payload.ContainsKey("agent"))
+                        {
+                            var agent = (Hashtable)payload["agent"];
+                            if (agent.ContainsKey("pid"))
+                                entity["pid"] = agent["pid"];
+                        }
+                    }
+                }
         }
 
         public bool IsMember(Hashtable entity) => entity[TypeTagName].Equals(DataName);

@@ -156,7 +156,7 @@ public class Repl
                         output[index++] = TextUtilities.NewLineToken;
                     }
 
-                    return k(o.Append(output), bindings.Unifications, bindings.State, p);
+                    return k(o.Append(Step.TextUtilities.FreshLineToken).Append(output), bindings.Unifications, bindings.State, p);
                 }),
 
             ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",

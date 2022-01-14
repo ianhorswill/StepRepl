@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,20 +21,7 @@ namespace Assets.SION
                             Repl.CurrentRepl.ProjectPath,
                             fileName + ".sim"))));
 
-            //m["PatchReferences"] = new SimplePredicate<Hashtable>("PatchReferences",
-            //    d =>
-            //    {
-            //        PatchEntityReferences(d);
-            //        return true;
-            //    });
-
             m["GetPath"] = new SimpleFunction<Hashtable, string[], object>("GetPath", GetPath<object>);
-
-            //m["EntityTable"] = new SimpleFunction<Hashtable, IList>("EntityTable", db => EntityTable(db).ToList());
-
-            //m["EntitiesOfType"] =
-            //    new SimpleFunction<IEnumerable<Hashtable>, string, IEnumerable<Hashtable>>("EntitiesOfType",
-            //        (entities, t) => entities.Where(e => e["type"].Equals(t)).ToList());
 
             m["DefineEntityType"] = new SimplePredicate<string[], string, Hashtable>(
                 "DefineEntityType",
@@ -80,8 +68,38 @@ namespace Assets.SION
                     return true;
                 });
 
-            m[nameof(IndexEntities)] =
-                new SimpleFunction<IList<Hashtable>, Hashtable>(nameof(IndexEntities), IndexEntities);
+            m["DefineSlotPredicate"] = new SimplePredicate<string[], string, object>("DefineSlotPredicate",
+                (tokens, slotName, collection) =>
+                {
+                    var name = tokens[0];
+                    switch (collection)
+                    {
+                        case ArrayList a:
+                            m[name] = MakeSlotPredicate(name, a, slotName);
+                            break;
+
+                        case EntityType t:
+                            m[name] = MakeSlotPredicate(name, t, slotName);
+                            break;
+
+                        case List<Hashtable> l:
+                            m[name] = MakeSlotPredicate(name, l, slotName);
+                            break;
+
+                        default:
+                            throw new ArgumentException("Invalid collection argument");
+                    }
+
+                    return true;
+                });
+
+            m["DefineIndexedSlotPredicate"] = new SimplePredicate<string[], EntityType, string, EntityType>("DefineIndexedSlotPredicate",
+                (tokens, argType, slotName, valueType) =>
+                {
+                    string name = tokens[0];
+                    m[name] = MakeIndexedSlotPredicate(name, argType, valueType, slotName);
+                    return true;
+                });
         }
         public static T GetPath<T>(Hashtable d, params string[] path) => GetPath<T>(d, (IEnumerable<string>)path);
         
@@ -92,77 +110,7 @@ namespace Assets.SION
                 result = ((Hashtable) result)[key];
             return (T)result;
         }
-        
-        //private static void PatchEntityReferences(Hashtable database)
-        //{
-        //    var entities = GetPath<ArrayList>(database, "entityman", "entities");
-        //    var tableSize = entities.Count * 2;
-        //    var entityReferenceTable = new Dictionary<string, Hashtable>(tableSize);
-        //    // Unity's version of .NET doesn't support a size parameter for the HashSet constructor
-        //    // and it can't handle autosizing as large as we need.
-        //    //var entitySet = new Dictionary<Hashtable, bool>(tableSize);
-        //    //var walkedEntities = new Dictionary<Hashtable, bool>(tableSize);
 
-        //    // Move type into the data hashtables themselves, and build the reference table
-        //    foreach (Hashtable e in entities)
-        //    {
-        //        var type = e["tmpl"];
-        //        var id = (int)e["i"];
-        //        var data = (Hashtable)e["data"];
-        //        if (data.ContainsKey("person"))
-        //            data = (Hashtable)data["person"];
-        //        data["type"] = type;
-        //        entityReferenceTable[$"E1_{id}"] = data;
-        //        //entitySet.Add(data, true);
-        //    }
-
-        //    var remap = new Stack<(Hashtable, string, Hashtable)>();
-
-        //    void Walk(object x, int depth)
-        //    {
-        //        if (depth > 3)
-        //            return;
-        //        switch (x)
-        //        {
-        //            case ArrayList a:
-        //                foreach (var e in a) Walk(a, depth+1);
-        //                break;
-
-        //            case Hashtable h:
-        //                //if (entitySet.ContainsKey(h) && walkedEntities.ContainsKey(h))
-        //                //    return;
-        //                //walkedEntities.Add(h, true);
-        //                var remapCount = 0;
-        //                foreach (DictionaryEntry e in h)
-        //                {
-        //                    var v = e.Value;
-        //                    if (v is string s)
-        //                    {
-        //                        if (entityReferenceTable.TryGetValue(s, out var entity))
-        //                        {
-        //                            // We can't actually do the remapping now, because we can't modify the dictionary
-        //                            // while walking it, so we save it in a stack
-        //                            remap.Push((h, s, entity));
-        //                            remapCount++;
-        //                        }
-        //                    }
-        //                    else 
-        //                        Walk(v, depth+1);
-        //                }
-
-        //                for (; remapCount > 0; remapCount--)
-        //                {
-        //                    var (t, s, e) = remap.Pop();
-        //                    Debug.Assert(t == h);  // paranoid
-        //                    h[s] = e;
-        //                }
-        //                break;
-        //        }
-        //    }
-            
-        //    Walk(database, 0);
-        //}
-        
         private static void TranslateEnumeration(EntityType t, string oldName, string newName, object[] values, int divisor)
         {
             foreach (var e in t.Entities)
@@ -207,19 +155,19 @@ namespace Assets.SION
             }
         }
 
-        private static Hashtable IndexEntities(IList<Hashtable> entities)
-        {
-            var index = new Hashtable(entities.Count*20);
-            foreach (var e in entities)
-            {
-                var uid = (int) e["uid"];
-                index[uid] = e;
-                index[$"E1_{uid}"] = e;
-            }
+        //private static Hashtable IndexEntities(IList<Hashtable> entities)
+        //{
+        //    var index = new Hashtable(entities.Count*20);
+        //    foreach (var e in entities)
+        //    {
+        //        var uid = (int) e["uid"];
+        //        index[uid] = e;
+        //        index[$"E1_{uid}"] = e;
+        //    }
 
-            return index;
-        }
-
+        //    return index;
+        //}
+        
         private static string[] relNames =
         {
             "self", "spouse", "child", "mother", "father", "sibling", "mother_sib", "father_sib", "sib_child", "cousin",
@@ -234,5 +182,39 @@ namespace Assets.SION
             return true;
         }
 
+        private static readonly Dictionary<ArrayList, List<Hashtable>> ListTable = new Dictionary<ArrayList, List<Hashtable>>();
+
+        public static List<Hashtable> Listify(ArrayList a)
+        {
+            if (ListTable.TryGetValue(a, out var list))
+                return list;
+            list = a.Cast<Hashtable>().ToList();
+            ListTable[a] = list;
+            return list;
+        }
+
+        public static GeneralPredicate<Hashtable, object> MakeSlotPredicate(string predicateName, List<Hashtable> collection, string slotName) =>
+            new GeneralPredicate<Hashtable, object>(predicateName,
+                (h, v) => h[slotName].Equals(v),
+                h => new []{ h[slotName]},
+                v => collection.Where(h => h[slotName].Equals(v)),
+                () => collection.Where(h => h.ContainsKey(slotName)).Select(h => (h, h[slotName])));
+
+        public static GeneralPredicate<Hashtable, object> MakeSlotPredicate(string predicateName, EntityType t,
+            string slotName) =>
+            MakeSlotPredicate(predicateName, t.Entities, slotName);
+
+        public static GeneralPredicate<Hashtable, object> MakeSlotPredicate(string predicateName, ArrayList a,
+            string slotName) =>
+            MakeSlotPredicate(predicateName, Listify(a), slotName);
+
+        public static GeneralPredicate<Hashtable, Hashtable> MakeIndexedSlotPredicate(string predicateName,
+            EntityType entityType, EntityType valueType, string slotName) =>
+            new GeneralPredicate<Hashtable, Hashtable>(predicateName,
+                (h, v) => h.ContainsKey(slotName) && valueType.IdToEntity[(string)h[slotName]].Equals(v),
+                h => h.ContainsKey(slotName)?
+                    new[] { valueType.IdToEntity[(string)h[slotName]] } : new Hashtable[0],
+                v => entityType.Entities.Where(h => valueType.IdToEntity[(string)h[slotName]].Equals(v)),
+                () => entityType.Entities.Where(h => h.ContainsKey(slotName)).Select(h => (h, valueType.IdToEntity[(string)h[slotName]])));
     }
 }

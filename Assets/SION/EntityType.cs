@@ -7,19 +7,24 @@ namespace Assets.SION
 {
     public class EntityType
     {
+        public static bool Randomize = true;
+        
         public const string TypeTagName = "entity_type";
         
         public readonly string Name;
         public readonly string DataName;
-        
+
         public readonly List<Hashtable> Entities = new List<Hashtable>();
+
+        public IEnumerable<Hashtable> ShuffledEntities => Entities.MaybeShuffle(Randomize);
+        
         public readonly Dictionary<string, Hashtable> IdToEntity = new Dictionary<string, Hashtable>();
         public readonly Dictionary<Hashtable, string> EntityToId = new Dictionary<Hashtable, string>();
 
         // ReSharper disable once StringLiteralTypo
-        private static readonly string[] entityPath = new[] {"entityman", "entities"};
+        private static readonly string[] EntityPath = new[] {"entityman", "entities"};
 
-        private static readonly string[] playerPath = new[] {"players", "data", "players"};
+        private static readonly string[] PlayerPath = new[] {"players", "data", "players"};
 
         public EntityType(string name, string dataField, Hashtable database)
         {
@@ -27,7 +32,7 @@ namespace Assets.SION
             DataName = dataField;
 
             if (dataField == "gang")
-                foreach (Hashtable entity in SIONPrimitives.GetPath<ArrayList>(database, playerPath))
+                foreach (Hashtable entity in SIONPrimitives.GetPath<ArrayList>(database, PlayerPath))
                 {
                     var idString = (string) entity["pid"];
                     if (idString != null)
@@ -39,7 +44,7 @@ namespace Assets.SION
                     }
                 }
             else
-                foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, entityPath))
+                foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, EntityPath))
                 {
                     var payload = (Hashtable) entityWrapper["data"];
                     if (payload.ContainsKey(dataField))
@@ -68,7 +73,7 @@ namespace Assets.SION
         // The Step predicate Type(?x).  This works in both in and out modes
         public GeneralPredicate<object> TypePredicate => new GeneralPredicate<object>(Name,
             o => o is Hashtable h && IsMember(h),
-            () => Entities);
+            () => ShuffledEntities);
 
         // The Step predicate TypeIndex(?reference, ?entity).  This works in all possible modes, although I'm not sure what the
         // use case would be for OutOut.

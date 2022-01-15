@@ -11,15 +11,22 @@ namespace Assets.SION
     // ReSharper disable once InconsistentNaming
     public static class SIONPrimitives
     {
+        private static object fileCache;
+        
         public static void AddBuiltins(Module m)
         {
             m["SIONFile"] = new SimpleFunction<string, object>(
                 "SIONFile",
-                fileName => SomaSim.SION.SION.Parse(
-                    File.OpenText(
-                        Path.Combine(
-                            Repl.CurrentRepl.ProjectPath,
-                            fileName + ".sim"))));
+                fileName =>
+                {
+                    if (fileCache == null)
+                        fileCache = SomaSim.SION.SION.Parse(
+                            File.OpenText(
+                                Path.Combine(
+                                    Repl.CurrentRepl.ProjectPath,
+                                    fileName + ".sim")));
+                    return fileCache;
+                });
 
             m["GetPath"] = new SimpleFunction<Hashtable, string[], object>("GetPath", GetPath<object>);
 
@@ -100,6 +107,24 @@ namespace Assets.SION
                     m[name] = MakeIndexedSlotPredicate(name, argType, valueType, slotName);
                     return true;
                 });
+
+            m["DefineRelationPredicate"] = new SimplePredicate<string[], Hashtable, EntityType>(
+                "DefineRelationPredicate",
+                (name, db, personType) =>
+                {
+                    var store = new RelationStore(name[0], db, personType, null);
+                    m[name[0]] = store.Lookup;
+                    return true;
+                });
+
+            m["DefineRelationPredicateWithKey"] = new SimplePredicate<string[], Hashtable, EntityType, string>(
+                "DefineRelationPredicate",
+                (name, db, personType, key) =>
+                {
+                    var store = new RelationStore(name[0], db, personType, key);
+                    m[name[0]] = store.Lookup;
+                    return true;
+                });
         }
         public static T GetPath<T>(Hashtable d, params string[] path) => GetPath<T>(d, (IEnumerable<string>)path);
         
@@ -115,10 +140,13 @@ namespace Assets.SION
         {
             foreach (var e in t.Entities)
             {
-                var index = (int) e[oldName];
-                e[newName] = values[index/divisor];
-                if (oldName != newName)
-                    e.Remove(oldName);
+                if (e.ContainsKey(oldName))
+                {
+                    var index = (int) e[oldName];
+                    e[newName] = values[index / divisor];
+                    if (oldName != newName)
+                        e.Remove(oldName);
+                }
             }
         }
 
@@ -126,10 +154,13 @@ namespace Assets.SION
         {
             foreach (var e in t.Entities)
             {
-                var traits = (IEnumerable)e[oldName];
-                e[newName] = traits.Cast<string>().Select(s => s.Replace(prefix, "")).Cast<object>().ToArray();
-                if (oldName != newName)
-                    e.Remove(oldName);
+                if (e.ContainsKey(oldName))
+                {
+                    var traits = (IEnumerable) e[oldName];
+                    e[newName] = traits.Cast<string>().Select(s => s.Replace(prefix, "")).Cast<object>().ToArray();
+                    if (oldName != newName)
+                        e.Remove(oldName);
+                }
             }
         }
 
@@ -178,7 +209,8 @@ namespace Assets.SION
         {
             foreach (Hashtable relSet in rels)
             foreach (Hashtable rel in (ArrayList) relSet["data"])
-                rel["type"] = relNames[((int) rel["type"]) / 10];
+                if (rel["type"] is int)
+                    rel["type"] = relNames[((int) rel["type"]) / 10];
             return true;
         }
 
@@ -197,8 +229,8 @@ namespace Assets.SION
             new GeneralPredicate<Hashtable, object>(predicateName,
                 (h, v) => h[slotName].Equals(v),
                 h => new []{ h[slotName]},
-                v => collection.Where(h => h[slotName].Equals(v)),
-                () => collection.Where(h => h.ContainsKey(slotName)).Select(h => (h, h[slotName])));
+                v => collection.MaybeShuffle(EntityType.Randomize).Where(h => h[slotName].Equals(v)),
+                () => collection.MaybeShuffle(EntityType.Randomize).Where(h => h.ContainsKey(slotName)).Select(h => (h, h[slotName])));
 
         public static GeneralPredicate<Hashtable, object> MakeSlotPredicate(string predicateName, EntityType t,
             string slotName) =>
@@ -214,7 +246,7 @@ namespace Assets.SION
                 (h, v) => h.ContainsKey(slotName) && valueType.IdToEntity[(string)h[slotName]].Equals(v),
                 h => h.ContainsKey(slotName)?
                     new[] { valueType.IdToEntity[(string)h[slotName]] } : new Hashtable[0],
-                v => entityType.Entities.Where(h => valueType.IdToEntity[(string)h[slotName]].Equals(v)),
-                () => entityType.Entities.Where(h => h.ContainsKey(slotName)).Select(h => (h, valueType.IdToEntity[(string)h[slotName]])));
+                v => entityType.ShuffledEntities.Where(h => valueType.IdToEntity[(string)h[slotName]].Equals(v)),
+                () => entityType.ShuffledEntities.Where(h => h.ContainsKey(slotName)).Select(h => (h, valueType.IdToEntity[(string)h[slotName]])));
     }
 }

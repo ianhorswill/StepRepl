@@ -7,7 +7,7 @@ namespace Assets.SION
 {
     public class EntityType
     {
-        public const string TypeTagName = "type";
+        public const string TypeTagName = "entity_type";
         
         public readonly string Name;
         public readonly string DataName;
@@ -26,7 +26,7 @@ namespace Assets.SION
             Name = name;
             DataName = dataField;
 
-            if (dataField == "player")
+            if (dataField == "gang")
                 foreach (Hashtable entity in SIONPrimitives.GetPath<ArrayList>(database, playerPath))
                 {
                     var idString = (string) entity["pid"];
@@ -35,6 +35,7 @@ namespace Assets.SION
                         Entities.Add(entity);
                         IdToEntity[idString] = entity;
                         EntityToId[entity] = idString;
+                        entity[TypeTagName] = dataField;
                     }
                 }
             else

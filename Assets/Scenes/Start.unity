@@ -132,7 +132,6 @@ GameObject:
   - component: {fileID: 47984496}
   - component: {fileID: 47984499}
   - component: {fileID: 47984498}
-  - component: {fileID: 47984497}
   m_Layer: 5
   m_Name: Placeholder
   m_TagString: Untagged
@@ -159,26 +158,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &47984497
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 47984495}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 1
-  m_MinWidth: -1
-  m_MinHeight: -1
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
 --- !u!114 &47984498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -807,6 +786,7 @@ MonoBehaviour:
   ButtonPrefab: {fileID: 479209165073156352, guid: 787d6b62f9af7c141a8a3b7a322ad023,
     type: 3}
   OutputText: {fileID: 2098888329}
+  OutputLinkHandler: {fileID: 0}
   Command: {fileID: 1892627517}
   DebugOutput: {fileID: 850212047}
 --- !u!1 &733484034
@@ -1896,18 +1876,18 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1892627515}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_IgnoreLayout: 0
   m_MinWidth: -1
-  m_MinHeight: 53
+  m_MinHeight: 32
   m_PreferredWidth: -1
-  m_PreferredHeight: 53.22
+  m_PreferredHeight: -1
   m_FlexibleWidth: -1
-  m_FlexibleHeight: 53.22
+  m_FlexibleHeight: -1
   m_LayoutPriority: 1
 --- !u!1 &2098888327
 GameObject:

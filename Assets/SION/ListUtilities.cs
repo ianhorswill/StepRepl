@@ -16,7 +16,7 @@ namespace Assets.SION
             // Set HighestPrimeIndex[i] = index of largest prime in Primes that less than i
             for (int i = 1; i < HighestPrimeIndex.Length; i++)
             {
-                if (i > HighestPrimeIndex[index + 1])
+                if (index < Primes.Length - 1 && i > Primes[index + 1])
                     // Next prime
                     index++;
                 HighestPrimeIndex[i] = index;

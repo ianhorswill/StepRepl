@@ -56,6 +56,7 @@ namespace Assets.SION
         public readonly GeneralNAryPredicate Lookup;
 
         private static bool Unifiable(object arg, object value) => arg is LogicVariable || arg.Equals(value);
+        
         private IEnumerable<object[]> PredicateImplementation(object[] args)
         {
             ArgumentCountException.Check(Lookup, 4, args);

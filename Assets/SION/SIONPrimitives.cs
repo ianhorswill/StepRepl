@@ -108,6 +108,14 @@ namespace Assets.SION
                     return true;
                 });
 
+            m["DefineInModeIndexedSlotPredicate"] = new SimplePredicate<string[], string, EntityType>("DefineInModeIndexedSlotPredicate",
+                (tokens, slotName, valueType) =>
+                {
+                    string name = tokens[0];
+                    m[name] = MakeIndexedSlotPredicate(name, valueType, slotName);
+                    return true;
+                });
+
             m["DefineRelationPredicate"] = new SimplePredicate<string[], Hashtable, EntityType>(
                 "DefineRelationPredicate",
                 (name, db, personType) =>
@@ -248,5 +256,13 @@ namespace Assets.SION
                     new[] { valueType.IdToEntity[(string)h[slotName]] } : new Hashtable[0],
                 v => entityType.ShuffledEntities.Where(h => valueType.IdToEntity[(string)h[slotName]].Equals(v)),
                 () => entityType.ShuffledEntities.Where(h => h.ContainsKey(slotName)).Select(h => (h, valueType.IdToEntity[(string)h[slotName]])));
+
+        public static GeneralPredicate<Hashtable, Hashtable> MakeIndexedSlotPredicate(string predicateName,
+            EntityType valueType, string slotName) =>
+            new GeneralPredicate<Hashtable, Hashtable>(predicateName,
+                (h, v) => h.ContainsKey(slotName) && valueType.IdToEntity[(string) h[slotName]].Equals(v),
+                h => h.ContainsKey(slotName) ? new[] {valueType.IdToEntity[(string) h[slotName]]} : new Hashtable[0],
+                null,
+                null);
     }
 }

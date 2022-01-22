@@ -68,7 +68,11 @@ namespace Assets.SION
                 }
         }
 
-        public bool IsMember(Hashtable entity) => entity[TypeTagName].Equals(DataName);
+        public bool IsMember(Hashtable entity)
+        {
+            var tag = entity[TypeTagName];
+            return tag != null && tag.Equals(DataName);
+        }
 
         // The Step predicate Type(?x).  This works in both in and out modes
         public GeneralPredicate<object> TypePredicate => new GeneralPredicate<object>(Name,

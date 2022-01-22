@@ -133,7 +133,25 @@ namespace Assets.SION
                     m[name[0]] = store.Lookup;
                     return true;
                 });
+
+            m["SIONDate"] =
+                new SimplePredicate<object>("SIONDate", o => o is Hashtable && ((Hashtable) o).ContainsKey("days"));
+
+            m["DecodeCoGDate"] = new SimpleFunction<Hashtable, DateTime>("SIONToDate", SIONToDateTime);
+
+            m["FormatSIONDate"] = new SimpleFunction<string[], Hashtable, string>(
+                "FormatSIONDate", 
+                (f, d)=> SIONToDateTime(d).ToString(f.Untokenize()));
         }
+
+        private static DateTime SIONToDateTime(Hashtable date)
+        {
+            var days = (int) date["days"];
+            var year = days / 365;
+            var dayOfYear = days % 365;
+            return new DateTime(year, 1, 1) + new TimeSpan(dayOfYear, 0, 0, 0);
+        }
+
         public static T GetPath<T>(Hashtable d, params string[] path) => GetPath<T>(d, (IEnumerable<string>)path);
         
         public static T GetPath<T>(Hashtable d, IEnumerable<string> path)

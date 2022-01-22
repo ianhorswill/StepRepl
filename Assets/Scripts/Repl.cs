@@ -115,7 +115,7 @@ public class Repl
     {
         SetPointSize(PointSize);
         CurrentRepl = this;
-        ContinueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
+        continueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
         DisableContinue();
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
@@ -156,7 +156,7 @@ public class Repl
                         output[index++] = TextUtilities.NewLineToken;
                     }
 
-                    return k(o.Append(Step.TextUtilities.FreshLineToken).Append(output), bindings.Unifications, bindings.State, p);
+                    return k(o.Append(TextUtilities.FreshLineToken).Append(output), bindings.Unifications, bindings.State, p);
                 }),
 
             ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",
@@ -367,7 +367,7 @@ public class Repl
         for (var i = ButtonBarContent.childCount - 1; i >= 0; i--)
         {
             var button = ButtonBarContent.GetChild(i).gameObject;
-            if (button != ContinueButton)
+            if (button != continueButton)
                 Destroy(button);
         }
     }
@@ -391,17 +391,17 @@ public class Repl
         return button;
     }
 
-    private GameObject ContinueButton;
+    private GameObject continueButton;
 
     private void DisableContinue()
     {
-        ContinueButton.SetActive(false);
+        continueButton.SetActive(false);
         LayoutRebuilder.MarkLayoutForRebuild((RectTransform)Command.transform.parent.transform);
     }
 
     private void EnableContinue()
     {
-        ContinueButton.SetActive(true);
+        continueButton.SetActive(true);
         LayoutRebuilder.MarkLayoutForRebuild((RectTransform)Command.transform.parent.transform);
     }
 

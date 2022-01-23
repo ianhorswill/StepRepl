@@ -515,6 +515,18 @@
         <member name="M:Step.Interpreter.SimpleFunction`7.Iterator(System.Object[],Step.Interpreter.BindingEnvironment)">
             <inheritdoc />
         </member>
+        <member name="T:Step.Interpreter.SimpleNAryFunction">
+            <summary>
+            A simple function supporting a variable number of arguments
+            All type checking is left to the implementation function
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.SimpleNAryFunction.#ctor(System.String,System.Func{System.Object[],System.Object})">
+            <inheritdoc />
+        </member>
+        <member name="M:Step.Interpreter.SimpleNAryFunction.Iterator(System.Object[],Step.Interpreter.BindingEnvironment)">
+            <inheritdoc />
+        </member>
         <member name="T:Step.Interpreter.SimplePredicate">
             <summary>
             A primitive task that implements a deterministic function from arguments to a boolean

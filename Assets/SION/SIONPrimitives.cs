@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Step;
 using Step.Interpreter;
+using UnityEngine.AI;
 
 namespace Assets.SION
 {
@@ -39,6 +41,15 @@ namespace Assets.SION
                     m[name] = t.TypePredicate;
                     m[name + "Type"] = t;
                     m[name + "Index"] = t.ReferencePredicate;
+                    return true;
+                });
+
+            m["DefineLedger"] = new SimplePredicate<string[], Hashtable, EntityType>(
+                "DefineLedger",
+                (tokens, database, entities) =>
+                {
+                    var name = tokens[0];
+                    m[name] = MakeLedgerPredicate(name, database, entities); ;
                     return true;
                 });
 
@@ -282,5 +293,75 @@ namespace Assets.SION
                 h => h.ContainsKey(slotName) ? new[] {valueType.IdToEntity[(string) h[slotName]]} : new Hashtable[0],
                 null,
                 null);
+
+        public static TuplePredicate MakeLedgerPredicate(string name, Hashtable database, EntityType entities) =>
+            new TuplePredicate(name,
+                new []
+                {
+                    typeof(Hashtable),  // agent
+                    typeof(string),     // event
+                    typeof(Hashtable),  // patient
+                    typeof(Hashtable),  // experiencer
+                    typeof(int),        // valence
+                    typeof(int),        // timestamp
+                },
+                new[]
+                {
+                    true,  // agent
+                    true,  // event
+                    true,  // patient
+                    true,  // experiencer
+                    true, // valence
+                    false, // timestamp
+                },
+                EventTuples(database, entities)) { Shuffler = tuples => tuples.MaybeShuffle(EntityType.Randomize) };
+
+        private static IEnumerable<object[]> EventTuples(Hashtable database, EntityType entities)
+        {
+            var players = GetPath<ArrayList>(database, "players", "data", "players");
+            var humanPlayer = (Hashtable)players[1];
+            var ledger = GetPath<ArrayList>(humanPlayer, "social", "historyledger");
+            
+            foreach (Hashtable e in ledger) 
+                yield return EncodeEvent(e, entities);
+        }
+
+        private static object[] EncodeEvent(Hashtable e, EntityType entities)
+        {
+            var from = entities.IdToEntity[(string)e["from"]];
+            var to = entities.IdToEntity[(string)e["to"]];
+            // ReSharper disable once StringLiteralTypo
+            var type = (string)e["eventname"];
+            var time = e["time"];
+
+            if (type == "ai" && !e.ContainsKey("method"))
+                Debugger.Break();
+            if (type == "ai")
+                return new[]
+                {
+                    from,               // agent
+                    // ReSharper disable once StringLiteralTypo
+                    e["method"],    // event
+                    "nothing",               // patient
+                    "nothing",               // experiencer
+                    0,                  // valence
+                    time,               // timestamp
+                };
+            else
+            {
+                var info = (Hashtable) e["info"];
+                var valence = info.ContainsKey("valence")?info["valence"] : 0;
+
+                return new[]
+                {
+                    to,                 // agent
+                    type,               // event
+                    entities.IdToEntity[(string)info["entityCtx"]],  // patient
+                    from,               // experiencer
+                    valence,            // valence
+                    time,               // timestamp
+                };
+            }
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace Assets.SION
                 foreach (Hashtable entityWrapper in SIONPrimitives.GetPath<ArrayList>(database, EntityPath))
                 {
                     var payload = (Hashtable) entityWrapper["data"];
-                    if (payload.ContainsKey(dataField))
+                    if (payload != null && payload.ContainsKey(dataField))
                     {
                         var entity = (Hashtable) payload[dataField];
                         var idString = SIONPrimitives.GetPath<string>(payload, "ident", "id");

@@ -69,12 +69,11 @@ public class Repl
 
     public void SetPointSize(float size)
     {
-        OutputText.pointSize = size;
-        Command.pointSize = size;
-        DebugOutput.pointSize = size;
+        Command.pointSize = size; 
+        OutputText.fontSize = size;
+        DebugOutput.fontSize = size;
     }
-    
-    
+
     public string ProjectPath
     {
         get => PlayerPrefs.GetString("CurrentProject", null);
@@ -86,11 +85,12 @@ public class Repl
 
     public bool TaskActive => CurrentTask != null && CurrentTask.Active;
 
-    public TMP_InputField OutputText;
+    public TMP_InputField Command;
+    
+    public TMP_Text OutputText;
     public LinkHandler OutputLinkHandler;
 
-    public TMP_InputField Command;
-    public TMP_InputField DebugOutput;
+    public TMP_Text DebugOutput;
 
     private string DebugText
     {
@@ -713,6 +713,18 @@ public class Repl
                     case KeyCode.UpArrow:
                         if (e.control)
                             Command.text = lastCommand;
+                        break;
+
+                    case KeyCode.PageDown:
+                        OutputText.pageToDisplay++;
+                        DebugOutput.pageToDisplay++;
+                        break;
+
+                    case KeyCode.PageUp:
+                        if (OutputText.pageToDisplay > 0)
+                            OutputText.pageToDisplay--;
+                        if (DebugOutput.pageToDisplay > 0)
+                            DebugOutput.pageToDisplay--;
                         break;
 
                     default:

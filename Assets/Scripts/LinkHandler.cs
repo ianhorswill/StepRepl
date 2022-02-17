@@ -18,7 +18,7 @@ public class LinkHandler : MonoBehaviour, IPointerClickHandler
 
     public void DeregisterLink(string link)
     {
-        linkTable.Remove(link);
+        //linkTable.Remove(link);
     }
 
     public void OnPointerClick(PointerEventData clickEvent)

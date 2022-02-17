@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using Step;
 using Step.Interpreter;
-using UnityEngine.AI;
 
 namespace Assets.SION
 {
@@ -49,7 +48,7 @@ namespace Assets.SION
                 (tokens, database, entities) =>
                 {
                     var name = tokens[0];
-                    m[name] = MakeLedgerPredicate(name, database, entities); ;
+                    m[name] = MakeLedgerPredicate(name, database, entities);
                     return true;
                 });
 

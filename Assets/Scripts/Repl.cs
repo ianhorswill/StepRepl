@@ -238,7 +238,7 @@ public class Repl
                     if (task == null)
                         throw new ArgumentException($"{code[0]} is not a value task to call in a link");
                     var state = e.State;
-                    var callback = repl.MakeCallBack(e.Module, () => state, task, code.Skip(1).ToArray());
+                    var callback = repl.MakeCallBack(e.Module, () => state, task, code.Skip(1).Select( e.CopyTerm).ToArray());
                     var link = repl.OutputLinkHandler.RegisterLink(callback);
                     var linkToken = $"<link=\"{link}\">";
                     if (k(o.Append(new []{ linkToken}), e.Unifications, e.State, p))
@@ -271,6 +271,7 @@ public class Repl
 
         Autograder.AddBuiltins();
         SIONPrimitives.AddBuiltins(ReplUtilities);
+        CatSATInterface.AddBuiltins(ReplUtilities);
     }
 
     private void EnsureProjectDirectory()

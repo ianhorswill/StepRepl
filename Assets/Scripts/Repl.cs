@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Assets.Scripts;
 using Assets.SION;
 using JetBrains.Annotations;
 using Step.Interpreter;
@@ -74,10 +75,20 @@ public class Repl
         DebugOutput.fontSize = size;
     }
 
+    private string projectPath;
     public string ProjectPath
     {
-        get => PlayerPrefs.GetString("CurrentProject", null);
-        set => PlayerPrefs.SetString("CurrentProject", value);
+        get
+        {
+            if (projectPath == null)
+                projectPath = PlayerPrefs.GetString("CurrentProject");
+            return projectPath;
+        }
+        set
+        {
+            projectPath = value;
+            PlayerPrefs.SetString("CurrentProject", value);
+        }
     }
 
     public Module ProjectModule;
@@ -247,7 +258,7 @@ public class Repl
                     return false;
                 }),
 
-            ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" })
+            ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" }),
         };
 
         ReplUtilities.AddDefinitions(
@@ -272,6 +283,7 @@ public class Repl
         Autograder.AddBuiltins();
         SIONPrimitives.AddBuiltins(ReplUtilities);
         CatSATInterface.AddBuiltins(ReplUtilities);
+        Json.AddBuiltins(ReplUtilities);
     }
 
     private void EnsureProjectDirectory()

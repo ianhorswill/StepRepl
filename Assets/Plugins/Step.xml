@@ -2497,12 +2497,12 @@
             Replace any occurence of the copula (e.g. is/are/be/being) with the specified replacement
             </summary>
         </member>
-        <member name="M:Step.Utilities.Randomizer.Shuffle``1(System.Collections.Generic.IList{``0})">
+        <member name="M:Step.Utilities.Randomization.Shuffle``1(System.Collections.Generic.IList{``0})">
             <summary>
             Make a randomly permuted copy of sequence
             </summary>
         </member>
-        <member name="M:Step.Utilities.Randomizer.WeightedShuffle``1(System.Collections.Generic.IList{``0},System.Func{``0,System.Single})">
+        <member name="M:Step.Utilities.Randomization.WeightedShuffle``1(System.Collections.Generic.IList{``0},System.Func{``0,System.Single})">
             <summary>
             Return a shuffled version of the elements in sequence, given the specified weights.
             This is based on Weighted Random Sampling (2005; Efraimidis, Spirakis), Encyclopedia of Algorithms.

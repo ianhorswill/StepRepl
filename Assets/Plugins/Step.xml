@@ -279,6 +279,24 @@
             <param name="inMode">Implementation of the predicate for when the argument is instantiated</param>
             <param name="outMode">Implementation of the predicate for when the argument is not instantiated</param>
         </member>
+        <member name="M:Step.Interpreter.GeneralPredicate`1.FromList(System.String,System.Collections.Generic.IList{`0})">
+            <summary>
+            Make a unary predicate from an IList.
+            List should not be modified after this call.
+            </summary>
+            <param name="name">Name for the predicate</param>
+            <param name="list">List containing all elements</param>
+            <returns>Predicate</returns>
+        </member>
+        <member name="M:Step.Interpreter.GeneralPredicate`1.FromListRandomized(System.String,System.Collections.Generic.IList{`0})">
+            <summary>
+            Make a unary predicate from an IList.  Enumerates elements using BadShuffle.
+            List should not be modified after this call.
+            </summary>
+            <param name="name">Name for the predicate</param>
+            <param name="list">List containing all elements</param>
+            <returns>Predicate</returns>
+        </member>
         <member name="M:Step.Interpreter.GeneralPredicate`1.Iterator(System.Object[],Step.Interpreter.BindingEnvironment)">
             <inheritdoc />
         </member>

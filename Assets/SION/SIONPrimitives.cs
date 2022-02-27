@@ -153,6 +153,14 @@ namespace Assets.SION
             m["FormatSIONDate"] = new SimpleFunction<string[], Hashtable, string>(
                 "FormatSIONDate", 
                 (f, d)=> SIONToDateTime(d).ToString(f.Untokenize()));
+
+            m["DefinePredicateFromIList"] = new SimplePredicate<string[], IList>("DefinePredicateFromIList",
+                (tokens, list) =>
+                {
+                    var name = tokens[0];
+                    m[name] = GeneralPredicate<object>.FromListRandomized(name, list.Cast<object>().ToArray());
+                    return true;
+                });
         }
 
         private static DateTime SIONToDateTime(Hashtable date)

@@ -679,6 +679,51 @@
             Number of arguments required by this task, if fixed.
             </summary>
         </member>
+        <member name="F:Step.Interpreter.Task.Arglist">
+            <summary>
+            Optional documentation of the names of the arguments to the task
+            These are here purely for documentation purposes.  They aren't used during the calling sequence.
+            </summary>
+        </member>
+        <member name="P:Step.Interpreter.Task.HasDocumentation">
+            <summary>
+            This task has documentation metadata
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Task.Arguments(System.String[])">
+            <summary>
+            Adds documentation of the arguments to the task
+            </summary>
+            <param name="arglist">The names of the arguments</param>
+            <typeparam name="T">Type of task</typeparam>
+            <returns>The original task</returns>
+        </member>
+        <member name="F:Step.Interpreter.Task.Description">
+            <summary>
+            Optional documentation of what the task does
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Task.Documentation(System.String)">
+            <summary>
+            Adds documentation of the description of the task
+            </summary>
+            <param name="documentation">Description of what the task does</param>
+            <typeparam name="T">Type of task</typeparam>
+            <returns>The original task</returns>
+        </member>
+        <member name="F:Step.Interpreter.Task.ManualSection">
+            <summary>
+            Optional documentation of what section of the manual this should appear in
+            </summary>
+        </member>
+        <member name="M:Step.Interpreter.Task.Documentation(System.String,System.String)">
+            <summary>
+            Adds documentation of the description of the task
+            </summary>
+            <param name="documentation">Description of what the task does</param>
+            <typeparam name="T">Type of task</typeparam>
+            <returns>The original task</returns>
+        </member>
         <member name="M:Step.Interpreter.Task.#ctor(System.String,System.Nullable{System.Int32})">
             <summary>
             Initialize name of task
@@ -1639,7 +1684,7 @@
             Tasks defined by user code are CompoundTasks
             </summary>
         </member>
-        <member name="F:Step.Interpreter.CompoundTask.ArgCount">
+        <member name="P:Step.Interpreter.CompoundTask.ArgCount">
             <summary>
             Number of arguments expected by the task
             </summary>
@@ -2515,6 +2560,90 @@
             Replace any occurence of the copula (e.g. is/are/be/being) with the specified replacement
             </summary>
         </member>
+        <member name="T:Step.Utilities.Documentation">
+            <summary>
+            Utilities for generating documentation about tasks
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DefineGlobals(Step.Module)">
+            <summary>
+            Add bindings for documentation functions
+            </summary>
+            <param name="m"></param>
+        </member>
+        <member name="M:Step.Utilities.Documentation.Apropos(System.Object[],Step.Interpreter.TextBuffer,Step.Interpreter.BindingEnvironment,Step.Interpreter.MethodCallFrame,Step.Interpreter.Step.Continuation)">
+            <summary>
+            Find all tasks that contain the specified string in their name, arglists, or documentation, and print their documentation.
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.WriteHtmlReference(Step.Module,System.String)">
+            <summary>
+            Write a little manual in HTML format
+            </summary>
+            <param name="m">Module to get definitions from</param>
+            <param name="path">Path to write the file to</param>
+        </member>
+        <member name="T:Step.Utilities.Documentation.DocumentationFormatter">
+            <summary>
+            Formats documentation for a given output language (txt, unity rich text, or html)
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.#ctor(System.Func{System.String,System.String},System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Define the format of a particular output format for printing documentation.
+            All arguments are optional.
+            </summary>
+            <param name="escapeText">Function for escaping special characters in a string</param>
+            <param name="startArgument">Prefix to print before an argument name</param>
+            <param name="endArgument">Suffix to print after an argument name</param>
+            <param name="startCode">Prefix to print before code</param>
+            <param name="endCode">Suffix to print after code</param>
+            <param name="startTaskName">Prefix to print before a task name</param>
+            <param name="endTaskName">Suffix to print after a task name</param>
+            <param name="lineBreak">Code to use to force a line break</param>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.FormatString(System.String)">
+            <summary>
+            Format a string for this output format
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.FormatArgument(System.String)">
+            <summary>
+            Format an argument name for this output format
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.FormatTaskName(System.String)">
+            <summary>
+            Format a task name for this output format
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.FormatCall(System.String,System.String[])">
+            <summary>
+            Format a call signature for this output format
+            </summary>
+        </member>
+        <member name="M:Step.Utilities.Documentation.DocumentationFormatter.FormatDocumentation(Step.Interpreter.Task)">
+            <summary>
+            Generate the documentation for a task in this output format
+            </summary>
+            <param name="t">Task to document</param>
+            <returns>Documentation</returns>
+        </member>
+        <member name="F:Step.Utilities.Documentation.RawTextFormatter">
+            <summary>
+            Formats documentation as raw text with now markup.
+            </summary>
+        </member>
+        <member name="F:Step.Utilities.Documentation.UnityRichTextFormatter">
+            <summary>
+            Formats documentation with markup for the Unity's rich text text boxes
+            </summary>
+        </member>
+        <member name="F:Step.Utilities.Documentation.HtmlFormatter">
+            <summary>
+            Formats documentation with HTML markup
+            </summary>
+        </member>
         <member name="M:Step.Utilities.Randomization.Shuffle``1(System.Collections.Generic.IList{``0})">
             <summary>
             Make a randomly permuted copy of sequence
@@ -2642,6 +2771,11 @@
         <member name="P:Step.Module.Bindings">
             <summary>
             All the variable bindings in this module.
+            </summary>
+        </member>
+        <member name="P:Step.Module.AllBindings">
+            <summary>
+            All the variable bindings in this module and its parent.
             </summary>
         </member>
         <member name="P:Step.Module.DefinedTasks">
@@ -2788,7 +2922,7 @@
             <summary>
             True if caller has a method that calls callee
             </summary>
-            <param name="caller">Caller (but be a CompoundTask)</param>
+            <param name="caller">Caller (must be a CompoundTask)</param>
             <param name="callee">Target of call (can be a CompoundTask or a primitive task, i.e. a delegate)</param>
         </member>
         <member name="M:Step.Module.StackTrace(Step.Interpreter.BindingList{Step.Interpreter.LogicVariable})">

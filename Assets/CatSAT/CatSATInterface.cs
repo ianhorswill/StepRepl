@@ -5,6 +5,7 @@ using Step;
 using Step.Interpreter;
 using CatSAT;
 using Step.Utilities;
+using UnityEditor.ShortcutManagement;
 using static CatSAT.Language;
 
 // ReSharper disable once InconsistentNaming
@@ -15,7 +16,9 @@ public static class CatSATInterface
         m["SATProblem"] = new GeneralPredicate<object>(
             "SATProblem",
             o => o is Problem,
-            () => new[] {new Problem()});
+            () => new[] {new Problem()})
+            .Arguments("?problem")
+            .Documentation("Places a new, empty, SAT problem in ?problem.");
 
         m["DefineProblem"] = new SimplePredicate<string[]>(
             "DefineProblem",
@@ -24,9 +27,13 @@ public static class CatSATInterface
                 var n = name[0];
                 m[n] = new Problem(n);
                 return true;
-            });
+            })
+            .Arguments("Name")
+            .Documentation("constraint solving", "Defines the global variable, Name, to be a new, empty, constraint problem.");
 
-        m[nameof(Assert)] = new SimpleNAryPredicate("Assert", Assert);
+        m[nameof(Assert)] = new SimpleNAryPredicate("Assert", Assert)
+            .Arguments("problem", "conclusion", "<-", "premise", "...")
+            .Documentation("constraint solving", "Adds an implication as a constraint to the problem");
         m["Unique"] = new SimpleNAryPredicate(
             "Unique",
             args =>
@@ -36,7 +43,9 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.Unique(args.Skip(1).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that one and only one of the alternatives must be true.");
 
         m["Exists"] = new SimpleNAryPredicate(
             "Exists",
@@ -47,7 +56,9 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.Exists(args.Skip(1).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that at least one of the alternatives must be true.");
 
         m["All"] = new SimpleNAryPredicate(
             "All",
@@ -58,7 +69,9 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.All(args.Skip(1).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "propositions", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that all of the propositions must be true.");
 
         m["Exactly"] = new SimpleNAryPredicate(
             "Exactly",
@@ -70,7 +83,9 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.Exactly(count, args.Skip(2).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "count", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that exactly count alternatives must be true.");
 
         m["AtLeast"] = new SimpleNAryPredicate(
             "AtLeast",
@@ -82,7 +97,8 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.AtLeast(count, args.Skip(2).Select(TermToLiteral));
                 return true;
-            });
+            }).Arguments("problem", "count", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that at least count alternatives must be true.");
 
         m["AtMost"] = new SimpleNAryPredicate(
             "AtMost",
@@ -94,7 +110,9 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.AtMost(count, args.Skip(2).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "count", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that at most count alternatives must be true.");
 
         m["Quantify"] = new SimpleNAryPredicate(
             "Quantify",
@@ -107,11 +125,15 @@ public static class CatSATInterface
                 Problem.Current = p;
                 p.Quantify(min, max, args.Skip(3).Select(TermToLiteral));
                 return true;
-            });
+            })
+            .Arguments("problem", "min", "max", "alternatives", "...")
+            .Documentation("constraint solving", "Adds to the problem the constraint that between min and max of the alternatives must be true.");
 
         m[nameof(DefinePredicate)] = new GeneralNAryPredicate(
             nameof(DefinePredicate),
-            args => DefinePredicate(m, args));
+            args => DefinePredicate(m, args))
+            .Arguments("Name", "args", "...")
+            .Documentation("constraint solving", "Specifies the global variable Name should be a constraint predicate with the specified arguments.");
         m["DefineSymmetricPredicate"] = new SimplePredicate<string[], string, string>(
             "DefineSymmetricPredicate",
             (name, arg1, arg2) =>
@@ -119,21 +141,27 @@ public static class CatSATInterface
                 var n = name[0];
                 m[n] = SymmetricPredicate<string>(n);
                 return true;
-            });
+            })
+            .Arguments("Name", "arg1", "arg2")
+            .Documentation("constraint solving", "Specifies the global variable Name should be a symmetric constraint predicate with the specified arguments.");
 
         m["Solution"] = new GeneralPredicate<Problem, PrimitiveTask>(
             "Solution",
             null,
             ProblemSolutions,
             null,
-            null);
+            null)
+            .Arguments("problem", "?solution")
+            .Documentation("constraint solving", "Attempts to generate a solution to problem and places it in ?solution.  Upon backtracking, generates new solutions (repetition is possible).  Only fails if solving fails.");
 
         m["SolveOnce"] = new GeneralPredicate<Problem, PrimitiveTask>(
             "SolveOnce",
             null,
             FirstProblemSolution,
             null,
-            null);
+            null)
+            .Arguments("problem", "?solution")
+            .Documentation("constraint solving", "Attempts to generate a solution to problem and places it in ?solution.  Succeeds only once: if that solution is rejected, the call fails.");
 
         m["ResetAssumptions"] = new SimplePredicate<Problem>(
             "ResetAssumptions",
@@ -141,7 +169,9 @@ public static class CatSATInterface
             {
                 p.ResetPropositions();
                 return true;
-            });
+            })
+            .Arguments("problem")
+            .Documentation("constraint solving", "Removes any assumptions from problem.");
 
         m["Assume"] = new SimplePredicate<Problem, object>(
             "Assume",
@@ -153,7 +183,9 @@ public static class CatSATInterface
                     return false;
                 p[lit] = true;
                 return true;
-            });
+            })
+            .Arguments("problem", "literal")
+            .Documentation("Adds to the problem the constraint that literal be true.  This can be retracted by calling ResetAssumptions.");
     }
 
     private static IEnumerable<PrimitiveTask> ProblemSolutions(Problem p) => ProblemSolutions(p, true);

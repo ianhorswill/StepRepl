@@ -15,7 +15,9 @@ namespace Assets.Scripts
                 "ReadJson",
                 fileName => JsonToHashtable(Path.Combine(
                     Repl.CurrentRepl.ProjectPath,
-                    fileName[0] + ".json")));
+                    fileName[0] + ".json")))
+                .Arguments("filename", "?json")
+                .Documentation("JSON", "Reads filename.json and places the decoded data in ?json.");
         }
 
         private static object JsonToHashtable(string path)

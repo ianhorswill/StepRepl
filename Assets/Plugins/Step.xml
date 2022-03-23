@@ -2287,7 +2287,7 @@
             Add current stream character to token
             </summary>
         </member>
-        <member name="M:Step.Parser.TextFileTokenStream.ConsumeToken">
+        <member name="M:Step.Parser.TextFileTokenStream.ConsumeToken(System.Boolean)">
             <summary>
             Return the accumulated characters as a token and clear the token buffer.
             </summary>

@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Step;
 using Step.Interpreter;
+using Step.Utilities;
 
 namespace Assets.Scripts
 {
@@ -11,6 +12,7 @@ namespace Assets.Scripts
     {
         public static void AddBuiltins(Module m)
         {
+            Documentation.SectionIntroduction("JSON", "Tasks for manipulating JSON files.  JSON files read as hash tables and arraylists, but of which can be accessed as if they're predicates: [table key ?value] accesses the value associated with key in table, and [list ?element] accesses elements in a list.");
             m["ReadJson"] = new SimpleFunction<string[], object>(
                 "ReadJson",
                 fileName => JsonToHashtable(Path.Combine(

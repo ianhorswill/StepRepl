@@ -2,6 +2,7 @@
 using System.IO;
 using Step;
 using Step.Interpreter;
+using Step.Utilities;
 
 public static class Autograder
 {

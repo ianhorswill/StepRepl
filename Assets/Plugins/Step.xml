@@ -2583,6 +2583,11 @@
             <param name="m">Module to get definitions from</param>
             <param name="path">Path to write the file to</param>
         </member>
+        <member name="M:Step.Utilities.Documentation.SectionIntroduction(System.String,System.String)">
+            <summary>
+            Specify text to print in the manual between the heading for a section and the first task description.
+            </summary>
+        </member>
         <member name="T:Step.Utilities.Documentation.DocumentationFormatter">
             <summary>
             Formats documentation for a given output language (txt, unity rich text, or html)

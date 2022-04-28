@@ -1,0 +1,281 @@
+<h1>Task reference</h1>
+<h2>Comparison</h2>
+Predicates that test whether two values are the same or different.  Many of these use unification, in which case they are testing whether the values can be made identical through binding variables.
+<p>
+<code>[<b>&lt;</b> <i>a</i> <i>b</i>]</code><br>True when a and b are both numbers and a is smaller
+<p>
+<code>[<b>&lt;=</b> <i>a</i> <i>b</i>]</code><br>True when a and b are both numbers and a is no larger than b
+<p>
+<code>[<b>=</b> <i>a</i> <i>b</i>]</code><br>Matches (unifies) a and b, and succeeds when they're the same.
+<p>
+<code>[<b>&gt;</b> <i>a</i> <i>b</i>]</code><br>True when a and b are both numbers and a is larger
+<p>
+<code>[<b>&gt;=</b> <i>a</i> <i>b</i>]</code><br>True when a and b are both numbers and a is at least as large as b
+<p>
+<code>[<b>Different</b> <i>a</i> <i>b</i>]</code><br>Attempts to match a and b and succeeds if they *can't* be matched
+<p>
+<h2>Constraint solving</h2>
+This is an experimental wrapper for the CatSAT SMT solver.  The API may change over time.
+<p>
+<code>[<b>DefinePredicate</b> <i>Name</i> <i>args</i> <i>...</i>]</code><br>Specifies the global variable Name should be a constraint predicate with the specified arguments.
+<p>
+<code>[<b>DefineProblem</b> <i>Name</i>]</code><br>Defines the global variable, Name, to be a new, empty, constraint problem.
+<p>
+<code>[<b>DefineSymmetricPredicate</b> <i>Name</i> <i>arg1</i> <i>arg2</i>]</code><br>Specifies the global variable Name should be a symmetric constraint predicate with the specified arguments.
+<p>
+<code>[<b>SATProblem</b> <i>?problem</i>]</code><br>Places a new, empty, SAT problem in ?problem.
+<p>
+<code>[<b>Solution</b> <i>problem</i> <i>?solution</i>]</code><br>Attempts to generate a solution to problem and places it in ?solution.  Upon backtracking, generates new solutions (repetition is possible).  Only fails if solving fails.
+<p>
+<code>[<b>SolveOnce</b> <i>problem</i> <i>?solution</i>]</code><br>Attempts to generate a solution to problem and places it in ?solution.  Succeeds only once: if that solution is rejected, the call fails.
+<p>
+<h3>Assertions</h3>
+Tasks for permanently adding an assertion (constraint) to a SAT problem.  These are imperatives that destructively modify the SAT problem, and so cannot be backtracked.
+<p>
+<code>[<b>All</b> <i>problem</i> <i>propositions</i> <i>...</i>]</code><br>Adds to the problem the constraint that all of the propositions must be true.
+<p>
+<code>[<b>Assert</b> <i>problem</i> <i>conclusion</i> <i>&lt;-</i> <i>premise</i> <i>...</i>]</code><br>Adds an implication as a constraint to the problem
+<p>
+<code>[<b>AtLeast</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at least count alternatives must be true.
+<p>
+<code>[<b>AtMost</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at most count alternatives must be true.
+<p>
+<code>[<b>Exactly</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that exactly count alternatives must be true.
+<p>
+<code>[<b>Exists</b> <i>problem</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at least one of the alternatives must be true.
+<p>
+<code>[<b>Quantify</b> <i>problem</i> <i>min</i> <i>max</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that between min and max of the alternatives must be true.
+<p>
+<code>[<b>Unique</b> <i>problem</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that one and only one of the alternatives must be true.
+<p>
+<h3>Assumptions</h3>
+Tasks for reversible add an assertion (constraint) to a SAT problem.  These are imperatives that destructively modify the SAT problem, and so cannot currently be backtracked.  However, all assumptions can be removed from a problem using ResetAssumptions.
+<p>
+<code>[<b>Assume</b> <i>problem</i> <i>literal</i>]</code><br>Adds to the problem the constraint that literal be true.  This can be retracted by calling ResetAssumptions.
+<p>
+<code>[<b>ResetAssumptions</b> <i>problem</i>]</code><br>Removes any assumptions from problem.
+<p>
+<h2>Control flow</h2>
+Tasks that run or otherwise control the execution of other tasks.
+<p>
+<code>[<b>Begin</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order.
+<p>
+<code>[<b>CountAttempts</b> <i>?count</i>]</code><br>Binds ?count to 0, then to increasing numbers each time the system backtracks to the call.  Used in a loop to run something repeatedly: [CountAttempts ?count] [DoSomething] [= ?count 100] will run DoSomething until ?count is 100.
+<p>
+<code>[<b>Throw</b> <i>message</i> <i>...</i>]</code><br>Throws an exception (error) containing the specified message.
+<p>
+<h3>Calling tasks</h3>
+Tasks that call another task once.
+<p>
+<code>[<b>Call</b> <i>call</i> <i>extra_arguments</i> <i>...</i>]</code><br>Runs the call to the task represented in the tuple 'call'. If extra_arguments are included, they will be added to the end of the call tuple.
+<p>
+<code>[<b>IgnoreOutput</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order, but throws away their output text.
+<p>
+<code>[<b>Parse</b> <i>call</i> <i>text</i>]</code><br>True if call can generate text as its output.  This is done by running call and backtracking whenever its output diverges from text.  Used to determine if a grammar can generate a given string.
+<p>
+<code>[<b>SaveText</b> <i>call</i> <i>?variable</i>]</code><br>Runs call, but places its output in ?variable rather than the output buffer.
+<p>
+<h3>Controlling backtracking</h3>
+Tasks that control how or whether execution backtracks.
+<p>
+<code>[<b>ExactlyOnce</b> <i>code</i> <i>...</i>]</code><br>Runs code normally.  If the code fails, ExactlyOnce throws an exception.  If it succeeds, ExactlyOnce succeeds.  However, if any subsequent code backtracks, once will not rerun the code, but will fail to whatever code preceded it.
+<p>
+<code>[<b>Fail</b>]</code><br>Never succeeds; forces the system to backtrack immediately.
+<p>
+<code>[<b>Once</b> <i>code</i> <i>...</i>]</code><br>Runs code normally, however, if any subsequent code backtracks, once will not rerun the code, but will fail to whatever code preceded it.
+<p>
+<h3>Looping</h3>
+Tasks that repeatedly call other tasks.
+<p>
+<code>[<b>DoAll</b> <i>generator_call</i> <i>other_calls</i> <i>...</i>]</code><br>Runs generator_call, finding all its solutions by backtracking.  For each solution, runs the other tasks, collecting all their text output.  Since the results are backtracked, any variable bindings or set commands are undone.
+<p>
+<code>[<b>ForEach</b> <i>generator_call</i> <i>other_calls</i> <i>...</i>]</code><br>Runs generator_call, finding all its solutions by backtracking.  For each solution, runs the other tasks, collecting all their text output.  Since the results are backtracked, any variable bindings are undone.  However, all text generated and set commands performed are preserved.
+<p>
+<h4>All solutions predicates</h4>
+Tasks that collect together all the solutions to a given call.
+<p>
+<code>[<b>FindAll</b> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Runs call, backtracking to find every possible solution to it.  For each solution, FindAll records the value of ?result, and returns a list of all ?results in order, in ?all_results.  If backtracking produces duplicate ?results, there will be multiple copies of them in ?all_results; to eliminate duplicate solutions, use FindUnique.  If call never fails, this will run forever.
+<p>
+<code>[<b>FindUnique</b> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Runs call, backtracking to find every possible solution to it.  For each solution, FindAll records the value of ?result, and returns a list of all ?results in order, in ?all_results, eliminating duplicate solutions.  If call never fails, this will run forever.
+<p>
+<code>[<b>Max</b> <i>?scoreVariable</i> <i>code</i> <i>...</i>]</code><br>Runs code, backtracking to find all solutions, keeping the state (text output and variable bindings) of the solution with the largest value of ?scoreVariable
+<p>
+<code>[<b>Min</b> <i>?scoreVariable</i> <i>code</i> <i>...</i>]</code><br>Runs code, backtracking to find all solutions, keeping the state (text output and variable bindings) of the solution with the smallest value of ?scoreVariable
+<p>
+<h2>Data structures</h2>
+Predicates that create or access complex data objects.  Note that dictionaries and lists can also be used as predicates.  So [dictionary ?key ?value] is true when ?key has ?value in the dictinoary and and [list ?element] is true when ?element is an element of the list.
+<p>
+<code>[<b>Hashtable</b> <i>?h</i>]</code><br>Creates a new empty hash table and stores it in ?h
+<p>
+<h3>Lists</h3>
+Predicates access lists in particular.  These work with any C# object that implements the IList interface, including Step tuples (which are the C# type object[]).
+<p>
+<code>[<b>Member</b> <i>element</i> <i>collection</i>]</code><br>True when element is an element of collection.
+<p>
+<h2>Debugging</h2>
+Tasks used to help debug code.
+<p>
+<code>[<b>Break</b>]</code><br>Stops execution and displays the current call stack in the debugger.
+<p>
+<code>[<b>Break</b>]</code><br>Breakpoint; pauses execution and displays the current stack in the debugger.
+<p>
+<h2>Documentation</h2>
+<code>[<b>Apropos</b> <i>topic</i>]</code><br>Print documentation for all tasks that mention topic.
+<p>
+<code>[<b>Help</b> <i>task</i>]</code><br>Print documentation for task
+<p>
+<h2>Higher-order predicates</h2>
+Predicates that run other predicates.
+<p>
+<code>[<b>Implies</b> <i>higher-order predicates</i> <i>other_calls</i> <i>...</i>]</code><br>True if for every solution to generator_call, other_calls succeeds.  So this is essentially like ForEach, but whereas ForEach always succeeds, Implies fails if other_calls ever fails.  Text output and sets of global variables are preserved, as with ForEach.
+<p>
+<code>[<b>Not</b> <i>call</i>]</code><br>Runs call.  If the call succeeds, it Not, fails, undoing any effects of the call.  If the call fails, then Not succeeds.
+<p>
+<h2>JSON</h2>
+Tasks for manipulating JSON files.  JSON files read as hash tables and arraylists, but of which can be accessed as if they're predicates: [table key ?value] accesses the value associated with key in table, and [list ?element] accesses elements in a list.
+<p>
+<code>[<b>ReadJson</b> <i>filename</i> <i>?json</i>]</code><br>Reads filename.json and places the decoded data in ?json.
+<p>
+<h2>Metalogical</h2>
+Predicates that test the binding state of a variable.
+<p>
+<code>[<b>NonVar</b> <i>x</i>]</code><br>Succeeds when its argument is a *not* an uninstantiated variable.
+<p>
+<code>[<b>Var</b> <i>x</i>]</code><br>Succeeds when its argument is an uninstantiated variable (a variable without a value)
+<p>
+<h2>Miscellaneous</h2>
+<code>[<b>Length</b> <i>list</i> <i>?length</i>]</code><br>True when list has exactly ?length elements
+<p>
+<h2>Output</h2>
+Tasks that print things.
+<p>
+<code>[<b>ForceSpace</b>]</code><br>Forces a space to be inserted between two tokens that wouldn't normally be separated.  For example, &quot;a .&quot; prints as &quot;a.&quot; but &quot;a [ForceSpace] .&quot; prints as &quot;a .&quot;
+<p>
+<code>[<b>FreshLine</b>]</code><br>Starts a new line, unless we're already at the start of a new line
+<p>
+<code>[<b>NewLine</b>]</code><br>Starts a new line
+<p>
+<code>[<b>Paragraph</b>]</code><br>Starts a new paragraph
+<p>
+<code>[<b>StringForm</b> <i>object</i> <i>?string_form</i>]</code><br>Matches ?string_form with the printed representation of object
+<p>
+<code>[<b>Write</b> <i>object</i>]</code><br>Prints object, transforming _'s to spaces
+<p>
+<code>[<b>WriteCapitalized</b> <i>object</i>]</code><br>Prints object, transforming _'s to spaces.  If the first character of the output is a lower-case letter, it will capitalize it.
+<p>
+<code>[<b>WriteConcatenated</b> <i>object1</i> <i>object2</i>]</code><br>Prints both objects, without a space between them, and changes and _'s to spaces.
+<p>
+<code>[<b>WriteVerbatim</b> <i>object</i>]</code><br>Prints object; _'s are printed as themselves rather than changed to spaces,
+<p>
+<h2>Randomization</h2>
+Tasks that choose random numbers or list elements.
+<p>
+<code>[<b>RandomElement</b> <i>list</i> <i>?element</i>]</code><br>Sets ?element to a random element of list.  If this is backtracked, it generates a random shuffle of the elements of this list.  However, not all shuffles are possible; it starts with a random element and moves to subsequent elements with a random step size.
+<p>
+<code>[<b>RandomIntegerExclusive</b> <i>min</i> <i>max</i> <i>?random</i>]</code><br>Sets ?random to a random integer such that min &lt;= ?random &lt; max
+<p>
+<code>[<b>RandomIntegerInclusive</b> <i>min</i> <i>max</i> <i>?random</i>]</code><br>Sets ?random to a random integer such that min &lt;= ?random &lt;= max
+<p>
+<h2>Reflection</h2>
+Predicates that can be used by a program to reason about itself.
+<p>
+<h3>Dynamic analysis</h3>
+Predicates that can be used by a program to check what tasks have been called in this execution path.
+<p>
+<code>[<b>CallerChainAncestor</b> <i>frame</i> <i>?method</i>]</code><br>True if ?method called frame's method or some other method that eventually called this frame's method.
+<p>
+<code>[<b>GoalChainAncestor</b> <i>frame</i> <i>?method</i>]</code><br>True if a successful call to ?method preceded this frame.
+<p>
+<code>[<b>LastMethodCallFrame</b> <i>?frame</i>]</code><br>Sets ?frame to the reflection information for the current method call.
+<p>
+<code>[<b>PreviousCall</b> <i>?call_pattern</i>]</code><br>Unifies ?call_pattern with the most recent successful call that matches it.  Backtracking will match against previous calls.
+<p>
+<code>[<b>UniqueCall</b> <i>?call_pattern</i>]</code><br>Calls ?call_pattern, finding successive solutions until one is found that can't be unified with a previous successful call.
+<p>
+<h3>Static analysis</h3>
+Predicates that can be used by a program to check what tasks can call what other tasks.
+<p>
+<code>[<b>TaskCalls</b> <i>?caller</i> <i>?callee</i>]</code><br>True if task ?caller has a method that calls ?callee
+<p>
+<code>[<b>TaskMethod</b> <i>?task</i> <i>?method</i>]</code><br>True when ?method is a method of ?task
+<p>
+<code>[<b>TaskSubtask</b> <i>?task</i> <i>?call</i>]</code><br>True if task ?caller has a method that contains the call ?call.
+<p>
+<h2>StepRepl</h2>
+Tasks that control the behavior of StepRepl or whatever other game engine the Step code is running inside of.
+<p>
+<code>[<b>EnvironmentOption</b> <i>argument</i> <i>...</i>]</code><br>Asks StepRepl or whatever other program this Step code is running in to change its handling of step code.
+<p>
+<h3>Display control</h3>
+Tasks that control how and when text is displayed on the screen.
+<p>
+<code>[<b>ClearOutput</b>]</code><br>Throws away any previously generated output
+<p>
+<code>[<b>SampleOutputText</b>]</code><br>Update the screen with a snapshot of the current output, even if the program hasn't finished running yet.  This is used for testing code that is running something over and over again so you can see that it's still running.
+<p>
+<h3>Internals</h3>
+These are internal functions used by StepRepl.
+<p>
+<code>[<b>PrintLocalBindings</b>]</code><br>Prints the values of all local variables.  There probably isn't any reason for you to use this directly, but it's used by StepRepl to print the results of queries.
+<p>
+<h3>Profiling</h3>
+Tasks used to check how often other tasks are run.
+<p>
+<code>[<b>CallCounts</b> <i>?task</i> <i>?subTaskPredicate</i> <i>?count</i>]</code><br>Runs ?Task ?count times, then displays the counts of every subtask that satisfies ?subTaskPredicate.
+<p>
+<code>[<b>EmptyCallSummary</b> <i>?summary</i>]</code><br>Makes a call summary object that can be used with NoteCalledTasks to record what tasks have been called.
+<p>
+<code>[<b>NoteCalledTasks</b> <i>call_summary</i>]</code><br>Adds all the tasks that were successfully executed on the path leading to this call to the specified call summary.
+<p>
+<code>[<b>Sample</b> <i>?task</i> <i>?testCount</i> <i>?sampling</i>]</code><br>Runs ?task ?testCount times, and returns a sampling of the call stack in ?sampling.
+<p>
+<code>[<b>Uncalled</b> <i>?task</i> <i>?subTaskPredicate</i> <i>?count</i>]</code><br>Runs ?task ?count times, then displays every task satisfying ?subTaskPredicate that is never called.
+<p>
+<h3>Testing</h3>
+Tools for unit-testing Step code.
+<p>
+<code>[<b>RunTestCases</b>]</code><br>Runs all test cases defined by TestCase.
+<p>
+<code>[<b>Test</b> <i>?task</i> <i>?testCount</i>]</code><br>Runs ?task ?testCount times, showing its output each time
+<p>
+<code>[<b>TestCase</b> <i>?code</i>]</code><br>(Defined by you).  Declares that code should be run when testing your program.
+<p>
+<h3>User interaction</h3>
+Tasks used to allow user control of Step code.
+<p>
+<code>[<b>Button</b> <i>?label</i> <i>?code</i>]</code><br>(Defined by you).  When a button labeled ?label is pressed, run ?code.
+<p>
+<code>[<b>EndLink</b>]</code><br>Ends a link started with [Link code].
+<p>
+<code>[<b>HotKey</b> <i>?key</i> <i>?doc</i> <i>?implementation</i>]</code><br>(Defined by you).  Tells the system to run ?implementation when you press ?key.
+<p>
+<code>[<b>HTMLTag</b> <i>tag_name</i> <i>value</i>]</code><br>Outputs the HTML tag: &lt;tagName=value&gt;
+<p>
+<code>[<b>Link</b> <i>code</i>]</code><br>Starts a clickable link in the output.  When the link is click, the system will run the code.  End with [EndLink]
+<p>
+<code>[<b>Pause</b>]</code><br>Stops execution and displays the current call stack in the debugger.
+<p>
+<code>[<b>ShowHotKeys</b>]</code><br>Print all defined hot keys.
+<p>
+<h2>String processing</h2>
+Predicates that test the spelling of strings.
+<p>
+<code>[<b>Contains</b> <i>string</i> <i>substring</i>]</code><br>True if substring is a substring of string
+<p>
+<code>[<b>NounSingularPlural</b> <i>?singular</i> <i>?plural</i>]</code><br>True if ?plural is the English plural form of ?singular
+<p>
+<code>[<b>StartsWithVowel</b> <i>string</i>]</code><br>True if the string starts with a vowel.
+<p>
+<h2>Type testing</h2>
+Predicates that test what type of data object their argument is.  These fail when the argument is an unbound variable.
+<p>
+<code>[<b>BinaryTask</b> <i>x</i>]</code><br>Succeeds when its argument is 2-argument task
+<p>
+<code>[<b>CompoundTask</b> <i>x</i>]</code><br>True if x is a compound task, i.e. a task defined by rules.
+<p>
+<code>[<b>Number</b> <i>x</i>]</code><br>Succeeds when its argument is a number
+<p>
+<code>[<b>String</b> <i>x</i>]</code><br>Succeeds when its argument is a string
+<p>
+<code>[<b>Tuple</b> <i>x</i>]</code><br>Succeeds when its argument is a tuple
+<p>

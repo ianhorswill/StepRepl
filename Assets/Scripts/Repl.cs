@@ -40,7 +40,9 @@ public class Repl
         };
 
         MakeUtilitiesModule();
-        //Documentation.WriteHtmlReference(ReplUtilities, "C:/users/ianho/desktop/Step manual.htm");
+#if UNITY_EDITOR
+        Documentation.WriteHtmlReference(ReplUtilities, "Reference manual.htm");
+#endif
     }
 
     // ReSharper disable once UnusedParameter.Local
@@ -150,6 +152,12 @@ public class Repl
 
     private static void MakeUtilitiesModule()
     {
+        Documentation.SectionIntroduction("StepRepl", "These tasks are defined by the StepRepl IDE.  To use them within a game not running inside StepRepl, you would need to copy their source into your game.");
+        Documentation.SectionIntroduction("StepRepl//internals", "These are internal functions used by StepRepl.");
+        Documentation.SectionIntroduction("StepRepl//display control", "Tasks that control how and when text is displayed on the screen.");
+        Documentation.SectionIntroduction("StepRepl//profiling", "Tasks used to check how often other tasks are run.");
+        Documentation.SectionIntroduction("StepRepl//user interaction", "Tasks used to allow user control of Step code.");
+
         ReplUtilities = new Module("Repl utilities", Module.Global)
         {
             ["PrintLocalBindings"] = new GeneralPrimitive("PrintLocalBindings",
@@ -171,7 +179,7 @@ public class Repl
                     return k(o.Append(TextUtilities.FreshLineToken).Append(output), bindings.Unifications, bindings.State, p);
                 })
                 .Arguments()
-                .Documentation("debugging","Prints the values of all local variables.  There probably isn't any reason for you to use this directly, but it's used by StepRepl to print the results of queries."),
+                .Documentation("StepRepl//internals","Prints the values of all local variables.  There probably isn't any reason for you to use this directly, but it's used by StepRepl to print the results of queries."),
 
             ["SampleOutputText"] = new GeneralPrimitive("SampleOutputText",
                 (args, o, bindings, p, k) =>
@@ -189,14 +197,14 @@ public class Repl
                     return k(o, bindings.Unifications, bindings.State, p);
                 })
                 .Arguments()
-                .Documentation("output control", "Update the screen with a snapshot of the current output, even if the program hasn't finished running yet.  This is used for testing code that is running something over and over again so you can see that it's still running."),
+                .Documentation("StepRepl//display control", "Update the screen with a snapshot of the current output, even if the program hasn't finished running yet.  This is used for testing code that is running something over and over again so you can see that it's still running."),
 
             ["EmptyCallSummary"] = new GeneralPredicate<Dictionary<CompoundTask, int>>("EmptyCallSummary",
                 _ => false,
                 () => new[] {new Dictionary<CompoundTask, int>()}
             )
                 .Arguments("?summary")
-                .Documentation("profiling", "Makes a call summary object that can be used with NoteCalledTasks to record what tasks have been called."),
+                .Documentation("StepRepl//profiling", "Makes a call summary object that can be used with NoteCalledTasks to record what tasks have been called."),
 
             ["NoteCalledTasks"] = new GeneralPrimitive("NoteCalledTasks",
                 (args, output, env, predecessor, k) =>
@@ -214,7 +222,7 @@ public class Repl
                     return k(output, env.Unifications, env.State, predecessor);
                 })
                 .Arguments("call_summary")
-                .Documentation("profiling", "Adds all the tasks that were successfully executed on the path leading to this call to the specified call summary."),
+                .Documentation("StepRepl//profiling", "Adds all the tasks that were successfully executed on the path leading to this call to the specified call summary."),
 
             ["Pause"] = new GeneralPrimitive("Pause", (args, o, bindings, p, k) =>
             {
@@ -226,7 +234,7 @@ public class Repl
                 return k(o, bindings.Unifications, bindings.State, p);
             })
                 .Arguments()
-                .Documentation("user interaction", "Stops execution and displays the current call stack in the debugger."),
+                .Documentation("StepRepl//user interaction", "Stops execution and displays the current call stack in the debugger."),
 
             ["Break"] = new GeneralPrimitive("Break", (args, o, bindings, p, k) =>
             {
@@ -246,12 +254,12 @@ public class Repl
                 (args, o, bindings, p, k) =>
                     k(new TextBuffer(o.Buffer.Length), bindings.Unifications, bindings.State, p))
                 .Arguments()
-                .Documentation("output control", "Throws away any previously generated output"),
+                .Documentation("StepRepl//display control", "Throws away any previously generated output"),
 
             ["HTMLTag"] = new DeterministicTextGenerator<string, object>("HTMLTag",
                 (htmlTag, value) => new[] {$"<{htmlTag}=\"{value}\">"})
                 .Arguments("tag_name", "value")
-                .Documentation("Outputs the HTML tag: <tagName=value>"),
+                .Documentation("StepRepl//user interaction", "Outputs the HTML tag: <tagName=value>"),
 
             ["Link"] = new GeneralPrimitive("Link",
                 (args, o, e, p, k) =>
@@ -274,11 +282,11 @@ public class Repl
                     return false;
                 })
                 .Arguments("code")
-                .Documentation("Starts a clickable link in the output.  When the link is click, the system will run the code.  End with [EndLink]"),
+                .Documentation("StepRepl//user interaction", "Starts a clickable link in the output.  When the link is click, the system will run the code.  End with [EndLink]"),
 
             ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" })
                 .Arguments()
-                .Documentation("Ends a link started with [Link code]."),
+                .Documentation("StepRepl//user interaction", "Ends a link started with [Link code]."),
         };
 
         void AddDocumentation(string taskName, string section, string docstring) =>
@@ -303,15 +311,17 @@ public class Repl
             "FindAllButtons ?buttonList: [FindAll [?label ?code] [Button ?label ?code] ?buttonList]"
         );
 
-        AddDocumentation("TestCase", "testing", "(Defined by you).  Declares that code should be run when testing your program.");
-        AddDocumentation("RunTestCases", "testing", "Runs all test cases defined by TestCase.");
-        AddDocumentation("Test", "testing", "Runs ?task ?testCount times, showing its output each time");
-        AddDocumentation("Sample", "profiling", "Runs ?task ?testCount times, and returns a sampling of the call stack in ?sampling.");
-        AddDocumentation("CallCounts", "profiling", "Runs ?Task ?count times, then displays the counts of every subtask that satisfies ?subTaskPredicate.");
-        AddDocumentation("Uncalled", "profiling", "Runs ?task ?count times, then displays every task satisfying ?subTaskPredicate that is never called.");
-        AddDocumentation("HotKey", "user interaction", "(Defined by you).  Tells the system to run ?implementation when you press ?key.");
-        AddDocumentation("ShowHotKeys", "user interaction", "Print all defined hot keys.");
-        AddDocumentation("Button", "user interaction", "(Defined by you).  When a button labeled ?label is pressed, run ?code.");
+        Documentation.SectionIntroduction("StepRepl//testing", "Tools for unit-testing Step code.");
+        
+        AddDocumentation("TestCase", "StepRepl//testing", "(Defined by you).  Declares that code should be run when testing your program.");
+        AddDocumentation("RunTestCases", "StepRepl//testing", "Runs all test cases defined by TestCase.");
+        AddDocumentation("Test", "StepRepl//testing", "Runs ?task ?testCount times, showing its output each time");
+        AddDocumentation("Sample", "StepRepl//profiling", "Runs ?task ?testCount times, and returns a sampling of the call stack in ?sampling.");
+        AddDocumentation("CallCounts", "StepRepl//profiling", "Runs ?Task ?count times, then displays the counts of every subtask that satisfies ?subTaskPredicate.");
+        AddDocumentation("Uncalled", "StepRepl//profiling", "Runs ?task ?count times, then displays every task satisfying ?subTaskPredicate that is never called.");
+        AddDocumentation("HotKey", "StepRepl//user interaction", "(Defined by you).  Tells the system to run ?implementation when you press ?key.");
+        AddDocumentation("ShowHotKeys", "StepRepl//user interaction", "Print all defined hot keys.");
+        AddDocumentation("Button", "StepRepl//user interaction", "(Defined by you).  When a button labeled ?label is pressed, run ?code.");
 
         Autograder.AddBuiltins();
         SIONPrimitives.AddBuiltins(ReplUtilities);

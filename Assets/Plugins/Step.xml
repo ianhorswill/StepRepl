@@ -2287,7 +2287,7 @@
             Add current stream character to token
             </summary>
         </member>
-        <member name="M:Step.Parser.TextFileTokenStream.ConsumeToken">
+        <member name="M:Step.Parser.TextFileTokenStream.ConsumeToken(System.Boolean)">
             <summary>
             Return the accumulated characters as a token and clear the token buffer.
             </summary>
@@ -2582,6 +2582,11 @@
             </summary>
             <param name="m">Module to get definitions from</param>
             <param name="path">Path to write the file to</param>
+        </member>
+        <member name="M:Step.Utilities.Documentation.SectionIntroduction(System.String,System.String)">
+            <summary>
+            Specify text to print in the manual between the heading for a section and the first task description.
+            </summary>
         </member>
         <member name="T:Step.Utilities.Documentation.DocumentationFormatter">
             <summary>

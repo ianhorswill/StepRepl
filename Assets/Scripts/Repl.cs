@@ -127,7 +127,11 @@ public class Repl
     [UsedImplicitly]
     void Start()
     {
+#if UNITY_EDITOR
         SetPointSize(PointSize);
+#else
+        SetPointSize(PointSize*2);
+#endif
         CurrentRepl = this;
         continueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
         DisableContinue();
@@ -172,7 +176,7 @@ public class Repl
                         output[index++] = v.Name.Name;
                         output[index++] = "=";
                         var value = bindings.CopyTerm(v);
-                        output[index++] = Writer.TermToString(value); //+$":{value.GetType().Name}";
+                        output[index++] = Writer.TermToString(value); // +$":{value.GetType().Name}";
                         output[index++] = TextUtilities.NewLineToken;
                     }
 
@@ -536,6 +540,19 @@ public class Repl
 
             ProjectPath = path;
             ReloadStepCode();
+            Command.text = "";
+        }
+        else if (command.StartsWith("size "))
+        {
+            var sizeString = command.Substring(command.IndexOf(' ')).Trim();
+            
+            if (float.TryParse(sizeString, out var size))
+                SetPointSize(size);
+            else
+            {
+                DebugText = $"<color=red>\"{sizeString}\" isn't a valid font size</color>";
+                return;
+            }
             Command.text = "";
         }
         else

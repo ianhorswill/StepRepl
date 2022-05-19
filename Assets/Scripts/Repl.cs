@@ -76,6 +76,7 @@ public class Repl
         Command.pointSize = size; 
         OutputText.fontSize = size;
         DebugOutput.fontSize = size;
+        PointSize = size;
     }
 
     private string projectPath;
@@ -91,6 +92,7 @@ public class Repl
         {
             projectPath = value;
             PlayerPrefs.SetString("CurrentProject", value);
+            PlayerPrefs.Save();
         }
     }
 
@@ -176,7 +178,7 @@ public class Repl
                         output[index++] = v.Name.Name;
                         output[index++] = "=";
                         var value = bindings.CopyTerm(v);
-                        output[index++] = Writer.TermToString(value); // +$":{value.GetType().Name}";
+                        output[index++] = Writer.TermToString(value); //+$":{value.GetType().Name}";
                         output[index++] = TextUtilities.NewLineToken;
                     }
 
@@ -447,6 +449,7 @@ public class Repl
         var button = Instantiate(ButtonPrefab, ButtonBarContent);
         button.name = label;
         button.GetComponentInChildren<TMP_Text>().text = label;
+        button.GetComponentInChildren<TMP_Text>().fontSize = PointSize;
         button.GetComponentInChildren<Button>().onClick.AddListener(pressHandler);
         return button;
     }

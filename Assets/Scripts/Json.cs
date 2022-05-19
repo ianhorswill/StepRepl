@@ -91,7 +91,10 @@ namespace Assets.Scripts
             reader.Read();   // Skip over StartArray
             while (reader.TokenType != JsonToken.EndArray)
             {
-                o.Add(ReadJsonThing(reader, true));
+                var element = ReadJsonThing(reader, true);
+                if (element is long l)
+                    element = (int) l;
+                o.Add(element);
                 reader.Read(); // Skip to next token
             }
 

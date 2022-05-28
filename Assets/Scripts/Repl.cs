@@ -76,6 +76,7 @@ public class Repl
         Command.pointSize = size; 
         OutputText.fontSize = size;
         DebugOutput.fontSize = size;
+        PointSize = size;
     }
 
     private string projectPath;
@@ -91,6 +92,7 @@ public class Repl
         {
             projectPath = value;
             PlayerPrefs.SetString("CurrentProject", value);
+            PlayerPrefs.Save();
         }
     }
 
@@ -127,7 +129,11 @@ public class Repl
     [UsedImplicitly]
     void Start()
     {
+#if UNITY_EDITOR
         SetPointSize(PointSize);
+#else
+        SetPointSize(PointSize*2);
+#endif
         CurrentRepl = this;
         continueButton = AddButton("Continue", () => CurrentRepl.ContinueTask());
         DisableContinue();
@@ -444,6 +450,7 @@ public class Repl
         var button = Instantiate(ButtonPrefab, ButtonBarContent);
         button.name = label;
         button.GetComponentInChildren<TMP_Text>().text = label;
+        button.GetComponentInChildren<TMP_Text>().fontSize = PointSize;
         button.GetComponentInChildren<Button>().onClick.AddListener(pressHandler);
         return button;
     }
@@ -539,6 +546,19 @@ public class Repl
             ReloadStepCode();
             Command.text = "";
         }
+        else if (command.StartsWith("size "))
+        {
+            var sizeString = command.Substring(command.IndexOf(' ')).Trim();
+            
+            if (float.TryParse(sizeString, out var size))
+                SetPointSize(size);
+            else
+            {
+                DebugText = $"<color=red>\"{sizeString}\" isn't a valid font size</color>";
+                return;
+            }
+            Command.text = "";
+        }
         else
             switch (command)
             {
@@ -588,6 +608,7 @@ public class Repl
     
     IEnumerator StepTaskDriver(StepTask task)
     {
+        DebugOutput.text = "";
         DisableContinue();
         var previouslyPaused = false;
         while (task.Active)

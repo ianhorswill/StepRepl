@@ -66,9 +66,17 @@ namespace Assets.Scripts
             {
                 if (reader.TokenType != JsonToken.PropertyName)
                     throw new Exception($"Invalid token type {reader.TokenType}");
-                var name = reader.Value;
-                o[name] = ReadJsonThing(reader);
+                var name = (string) reader.Value;
+                var value = ReadJsonThing(reader);
                 reader.Read();
+                if (value is long i)
+                    value = (int) i;
+                if (value != null)
+                {
+                    if (int.TryParse(name, out var numericName))
+                        o[numericName] = value;
+                    else o[name] = value;
+                }
             }
 
             // Now at EndObject
@@ -83,7 +91,10 @@ namespace Assets.Scripts
             reader.Read();   // Skip over StartArray
             while (reader.TokenType != JsonToken.EndArray)
             {
-                o.Add(ReadJsonThing(reader, true));
+                var element = ReadJsonThing(reader, true);
+                if (element is long l)
+                    element = (int) l;
+                o.Add(element);
                 reader.Read(); // Skip to next token
             }
 

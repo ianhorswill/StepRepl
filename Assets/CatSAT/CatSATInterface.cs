@@ -5,7 +5,6 @@ using Step;
 using Step.Interpreter;
 using CatSAT;
 using Step.Utilities;
-using UnityEditor.ShortcutManagement;
 using static CatSAT.Language;
 
 // ReSharper disable once InconsistentNaming

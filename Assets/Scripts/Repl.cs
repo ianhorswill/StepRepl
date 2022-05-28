@@ -607,6 +607,7 @@ public class Repl
     
     IEnumerator StepTaskDriver(StepTask task)
     {
+        DebugOutput.text = "";
         DisableContinue();
         var previouslyPaused = false;
         while (task.Active)

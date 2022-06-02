@@ -338,6 +338,7 @@ public class Repl
         SIONPrimitives.AddBuiltins(ReplUtilities);
         CatSATInterface.AddBuiltins(ReplUtilities);
         Json.AddBuiltins(ReplUtilities);
+        SExpressionReader.AddBuiltins(ReplUtilities);
     }
 
     private void EnsureProjectDirectory()

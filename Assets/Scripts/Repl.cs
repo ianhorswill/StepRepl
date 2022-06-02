@@ -41,7 +41,7 @@ public class Repl
 
         MakeUtilitiesModule();
 #if UNITY_EDITOR
-        Documentation.WriteHtmlReference(ReplUtilities, "Reference manual.htm");
+        Documentation.WriteHtmlReference(ReplUtilities, "Built-in task reference.htm");
 #endif
     }
 
@@ -52,6 +52,11 @@ public class Repl
         {
             case "retainState":
                 RetainState = true;
+                break;
+
+            case "discardState":
+                RetainState = false;
+                ExecutionState = State.Empty;
                 break;
         }
     }
@@ -348,6 +353,9 @@ public class Repl
     {
         try
         {
+            RetainState = false;
+            ExecutionState = State.Empty;
+            
             if (ButtonBarContent != null)
                 ClearButtonBar();
 
@@ -581,8 +589,10 @@ public class Repl
                 {
                     if (!command.StartsWith("["))
                         command = $"[{command}]";
-                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                    if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
                         command = $"[Test {command} 10000]";
+                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                            command = "[Break \"Press F5 to continue or F10/F11 to step\"]" + command;
 
                     command += "[PrintLocalBindings]";
                     RunStepCode(command);

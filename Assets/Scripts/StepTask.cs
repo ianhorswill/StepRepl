@@ -52,7 +52,7 @@ public class StepTask
     public StepTask(Module m, bool singleStep, StepInvocation start)
     {
         MethodCallFrame.MaxStackDepth = 1000;
-        Module = m;
+        Module = m??Module.Global;
         SingleStep = singleStep;
 
         thread = new Thread(() =>

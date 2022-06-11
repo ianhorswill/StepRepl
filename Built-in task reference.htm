@@ -139,6 +139,8 @@ Tasks for manipulating JSON files.  JSON files read as hash tables and arraylist
 <h2>Metalogical</h2>
 Predicates that test the binding state of a variable.
 <p>
+<code>[<b>CopyTerm</b> <i>in</i> <i>out</i>]</code><br>Sets out to a copy of in with fresh variables, so that unifications to one don't affect the other
+<p>
 <code>[<b>NonVar</b> <i>x</i>]</code><br>Succeeds when its argument is a *not* an uninstantiated variable.
 <p>
 <code>[<b>Var</b> <i>x</i>]</code><br>Succeeds when its argument is an uninstantiated variable (a variable without a value)

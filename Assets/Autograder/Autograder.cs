@@ -2,7 +2,6 @@
 using System.IO;
 using Step;
 using Step.Interpreter;
-using Step.Utilities;
 
 public static class Autograder
 {
@@ -107,7 +106,8 @@ public static class Autograder
         var call = ArgumentTypeException.Cast<object[]>(nameof(CallResult), args[0], args);
 
         // Kluge
-        if (call.Length == 2 && call[0] == Module.Global["Not"])
+        var inverted = call.Length == 2 && call[0] == Module.Global["Not"];
+        if (inverted)
             call = call[1] as object[];
 
         // ReSharper disable once PossibleNullReferenceException
@@ -131,7 +131,7 @@ public static class Autograder
 
         try
         {
-            result = task.Call(taskArgs, output, env, predecessor, (o, u, s, p) =>
+            result = inverted ^ task.Call(taskArgs, output, env, predecessor, (o, u, s, p) =>
             {
                 newOutput = o;
                 unifications = u;

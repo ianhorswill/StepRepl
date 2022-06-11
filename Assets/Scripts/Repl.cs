@@ -458,8 +458,9 @@ public class Repl
         var button = Instantiate(ButtonPrefab, ButtonBarContent);
         button.name = label;
         button.GetComponentInChildren<TMP_Text>().text = label;
-        button.GetComponentInChildren<TMP_Text>().fontSize = PointSize;
+        //button.GetComponentInChildren<TMP_Text>().fontSize = PointSize;
         button.GetComponentInChildren<Button>().onClick.AddListener(pressHandler);
+        //LayoutRebuilder.MarkLayoutForRebuild((RectTransform)button.transform);
         return button;
     }
 
@@ -814,12 +815,19 @@ public class Repl
                         if (DebugOutput.pageToDisplay > 0)
                             DebugOutput.pageToDisplay--;
                         break;
+                    
+                    case KeyCode.Print:
+                        GUIUtility.systemCopyBuffer = OutputText.text;
+                        break;
 
                     default:
                         if (e.alt && keyCode != KeyCode.LeftAlt && keyCode != KeyCode.RightAlt)
                         {
                             DebugText = "";
                             RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
+                        } else if (e.control && keyCode == KeyCode.C)
+                        {
+                            GUIUtility.systemCopyBuffer = OutputText.text;
                         }
 
                         break;

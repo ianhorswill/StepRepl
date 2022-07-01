@@ -1965,6 +1965,11 @@
             <param name="input">Stream to read from</param>
             <param name="filePath">Path of the stream if it comes from a file (for debug messages)</param>
         </member>
+        <member name="F:Step.Parser.CsvFileTokenStream.EscapeStrings">
+            <summary>
+            If true, treat capitalized tokens in cells as strings rather than global variables
+            </summary>
+        </member>
         <member name="F:Step.Parser.TokenStream.FilePath">
             <summary>
             Path to file being read from, if any
@@ -2282,7 +2287,7 @@
             True it token buffer non-empty
             </summary>
         </member>
-        <member name="M:Step.Parser.TextFileTokenStream.AddCharToToken">
+        <member name="M:Step.Parser.TextFileTokenStream.AddCharToToken(System.Boolean)">
             <summary>
             Add current stream character to token
             </summary>
@@ -2292,7 +2297,7 @@
             Return the accumulated characters as a token and clear the token buffer.
             </summary>
         </member>
-        <member name="M:Step.Parser.TextFileTokenStream.Get">
+        <member name="M:Step.Parser.TextFileTokenStream.Get(System.Boolean)">
             <summary>
             Return the current character and advance to the next
             </summary>

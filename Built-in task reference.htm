@@ -107,6 +107,11 @@ Predicates that create or access complex data objects.  Note that dictionaries a
 <p>
 <code>[<b>Hashtable</b> <i>?h</i>]</code><br>Creates a new empty hash table and stores it in ?h
 <p>
+<h3>List</h3>
+<code>[<b>Length</b> <i>list</i> <i>?length</i>]</code><br>True when list has exactly ?length elements
+<p>
+<code>[<b>Nth</b> <i>list</i> <i>index</i> <i>?element</i>]</code><br>True when element of list at index is ?element
+<p>
 <h3>Lists</h3>
 Predicates access lists in particular.  These work with any C# object that implements the IList interface, including Step tuples (which are the C# type object[]).
 <p>
@@ -144,9 +149,6 @@ Predicates that test the binding state of a variable.
 <code>[<b>NonVar</b> <i>x</i>]</code><br>Succeeds when its argument is a *not* an uninstantiated variable.
 <p>
 <code>[<b>Var</b> <i>x</i>]</code><br>Succeeds when its argument is an uninstantiated variable (a variable without a value)
-<p>
-<h2>Miscellaneous</h2>
-<code>[<b>Length</b> <i>list</i> <i>?length</i>]</code><br>True when list has exactly ?length elements
 <p>
 <h2>Output</h2>
 Tasks that print things.
@@ -271,9 +273,19 @@ Predicates that test the spelling of strings.
 <p>
 <code>[<b>Contains</b> <i>string</i> <i>substring</i>]</code><br>True if substring is a substring of string
 <p>
+<code>[<b>Downcase</b> <i>string, ?capitalized</i>]</code><br>True when capitalized is the a copy of string, which the start of each word capitalized.
+<p>
+<code>[<b>DownCase</b> <i>string, ?downcased</i>]</code><br>True when downcased is the string with all alphabetic characters converted to lowercase.
+<p>
+<code>[<b>Downcased</b> <i>string, ?downcased</i>]</code><br>True when downcased is the string with all alphabetic characters converted to lowercase.
+<p>
+<code>[<b>Format</b> <i>format_string, argument_list, ?formatted_string</i>]</code><br>True when formatted_string is the result of formatting format_string with the arguments.  This is just a wrapper for .NET's string.Format routine.
+<p>
 <code>[<b>NounSingularPlural</b> <i>?singular</i> <i>?plural</i>]</code><br>True if ?plural is the English plural form of ?singular
 <p>
 <code>[<b>StartsWithVowel</b> <i>string</i>]</code><br>True if the string starts with a vowel.
+<p>
+<code>[<b>Upcased</b> <i>string, ?upcased</i>]</code><br>True when upcased is the string with all alphabetic characters converted to uppercase.
 <p>
 <h2>Type testing</h2>
 Predicates that test what type of data object their argument is.  These fail when the argument is an unbound variable.

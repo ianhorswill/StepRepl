@@ -73,7 +73,13 @@ public class Repl
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Step")
 #endif
         ,
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR_WIN
+        // This turns out to be a documented Mono issue.
+        // See https://xamarin.github.io/bugzilla-archives/41/41258/bug.html
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)+"/Documents", "GitHub")
+#else
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GitHub")
+#endif
     };
 
     public void SetPointSize(float size)
@@ -298,6 +304,14 @@ public class Repl
             ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" })
                 .Arguments()
                 .Documentation("StepRepl//user interaction", "Ends a link started with [Link code]."),
+
+            ["LaunchURL"] = new SimplePredicate<string>("LaunchURL", url =>
+            {
+                if (!(url.StartsWith("http://") || url.StartsWith("https://")))
+                    url = $"https://{url}";
+                System.Diagnostics.Process.Start(url);
+                return true;
+            })
         };
 
         void AddDocumentation(string taskName, string section, string docstring) =>

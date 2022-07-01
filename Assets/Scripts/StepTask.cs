@@ -31,6 +31,11 @@ public class StepTask
 
     public string BreakMessage;
 
+    /// <summary>
+    /// If true, output of task should be sent to the debug pane
+    /// </summary>
+    public bool DivertOutputToRight;
+
     public bool SingleStep
     {
         get => Module.Trace != null;

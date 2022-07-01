@@ -116,6 +116,7 @@ public class Repl
     
     public TMP_Text OutputText;
     public LinkHandler OutputLinkHandler;
+    public HoverHandler OutputHoverHandler;
 
     public TMP_Text DebugOutput;
 
@@ -151,6 +152,9 @@ public class Repl
         Application.quitting += AbortCurrentTask;
         MethodCallFrame.MaxStackDepth = 500;
         Module.RichTextStackTraces = true;
+
+        Command.onSubmit.AddListener(RunUserCommand);
+
         EnsureProjectDirectory();
 
         ReloadStepCode();
@@ -304,6 +308,40 @@ public class Repl
             ["EndLink"] = new DeterministicTextGenerator("EndLink", () => new []{ "</link>" })
                 .Arguments()
                 .Documentation("StepRepl//user interaction", "Ends a link started with [Link code]."),
+
+            ["Hover"] = new GeneralPrimitive("Hover",
+                    (args, o, e, p, k) =>
+                    {
+                        var repl = Repl.CurrentRepl;
+                        ArgumentCountException.Check("Hover", 1, args);
+                        var code = ArgumentTypeException.Cast<object[]>("Hover", args[0], args);
+                        if (code.Length == 0)
+                            throw new ArgumentException("[] is not a valid task call for a link");
+                        var task = code[0] as Task;
+                        if (task == null)
+                            throw new ArgumentException($"{code[0]} is not a value task to call in a hover handler");
+                        var state = e.State;
+                        var callback = repl.MakeCallBack(e.Module, () => state, task, code.Skip(1).Select(e.CopyTerm).ToArray());
+                        var link = repl.OutputHoverHandler.RegisterLink(callback);
+                        var linkToken = $"<link=\"{link}\">";
+                        if (k(o.Append(new[] { linkToken }), e.Unifications, e.State, p))
+                            return true;
+                        repl.OutputHoverHandler.DeregisterLink(link);
+                        return false;
+                    })
+                .Arguments("code")
+                .Documentation("StepRepl//user interaction", "Specifies a hover handler for the following text.  When the mouse moves over the text, the system will run the code.  End with [EndHover]"),
+
+            ["EndHover"] = new DeterministicTextGenerator("EndHover", () => new[] { "</link>" })
+                .Arguments()
+                .Documentation("StepRepl//user interaction", "Ends a link started with [Link code]."),
+
+            ["DivertOutputToRight"] = new SimplePredicate("DivertOutputToRight",
+                    () => { StepTask.CurrentStepTask.DivertOutputToRight = true;
+                        return true;
+                    })
+                .Arguments()
+                .Documentation("StepRepl//user interaction", "Display output in right text pane rather than the normal pane"),
 
             ["LaunchURL"] = new SimplePredicate<string>("LaunchURL", url =>
             {
@@ -718,8 +756,14 @@ public class Repl
         
         if (task.Exception == null)
         {
-            OutputText.text = task.Text; 
-            DebugOutput.text = "";
+            if (task.DivertOutputToRight)
+                DebugOutput.text = task.Text;
+            else
+            {
+                OutputText.text = task.Text;
+                DebugOutput.text = "";
+            }
+
             Command.SetTextWithoutNotify("");
         }
         else

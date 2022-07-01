@@ -150,6 +150,9 @@ Predicates that test the binding state of a variable.
 <p>
 <code>[<b>Var</b> <i>x</i>]</code><br>Succeeds when its argument is an uninstantiated variable (a variable without a value)
 <p>
+<h2>Miscellaneous</h2>
+<code>[<b>Cons</b> <i>firstElement</i> <i>restElements</i> <i>tuple</i>]</code><br>True when tuple starts with firstElement and continues with restElements.
+<p>
 <h2>Output</h2>
 Tasks that print things.
 <p>
@@ -256,9 +259,15 @@ Tasks used to allow user control of Step code.
 <p>
 <code>[<b>Button</b> <i>?label</i> <i>?code</i>]</code><br>(Defined by you).  When a button labeled ?label is pressed, run ?code.
 <p>
+<code>[<b>DivertOutputToRight</b>]</code><br>Display output in right text pane rather than the normal pane
+<p>
+<code>[<b>EndHover</b>]</code><br>Ends a link started with [Link code].
+<p>
 <code>[<b>EndLink</b>]</code><br>Ends a link started with [Link code].
 <p>
 <code>[<b>HotKey</b> <i>?key</i> <i>?doc</i> <i>?implementation</i>]</code><br>(Defined by you).  Tells the system to run ?implementation when you press ?key.
+<p>
+<code>[<b>Hover</b> <i>code</i>]</code><br>Specifies a hover handler for the following text.  When the mouse moves over the text, the system will run the code.  End with [EndHover]
 <p>
 <code>[<b>HTMLTag</b> <i>tag_name</i> <i>value</i>]</code><br>Outputs the HTML tag: &lt;tagName=value&gt;
 <p>

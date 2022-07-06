@@ -58,7 +58,11 @@ Tasks for reversible add an assertion (constraint) to a SAT problem.  These are 
 <h2>Control flow</h2>
 Tasks that run or otherwise control the execution of other tasks.
 <p>
-<code>[<b>Begin</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order.
+<code>[<b>And</b> <i>task</i> <i>...</i>]</code><br>Runs each of the tasks, in order.
+<p>
+<code>[<b>And</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order.
+<p>
+<code>[<b>And</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order until one works.
 <p>
 <code>[<b>CountAttempts</b> <i>?count</i>]</code><br>Binds ?count to 0, then to increasing numbers each time the system backtracks to the call.  Used in a loop to run something repeatedly: [CountAttempts ?count] [DoSomething] [= ?count 100] will run DoSomething until ?count is 100.
 <p>
@@ -134,7 +138,9 @@ Predicates that run other predicates.
 <p>
 <code>[<b>Implies</b> <i>higher-order predicates</i> <i>other_calls</i> <i>...</i>]</code><br>True if for every solution to generator_call, other_calls succeeds.  So this is essentially like ForEach, but whereas ForEach always succeeds, Implies fails if other_calls ever fails.  Text output and sets of global variables are preserved, as with ForEach.
 <p>
-<code>[<b>Not</b> <i>call</i>]</code><br>Runs call.  If the call succeeds, it Not, fails, undoing any effects of the call.  If the call fails, then Not succeeds.
+<code>[<b>Not</b> <i>call</i>]</code><br>Runs call.  If the call succeeds, it Not, fails, undoing any effects of the call.  If the call fails, then Not succeeds.  This requires the call to be ground (not contain any uninstantiated variables), since [Not [P ?x]] means &quot;not [P ?x] for any ?x&quot;.  Use NotAny if you mean to have unbound variables in the goal.
+<p>
+<code>[<b>NotAny</b> <i>call</i>]</code><br>Runs call.  If the call succeeds, it Not, fails, undoing any effects of the call.  If the call fails, then Not succeeds.
 <p>
 <h2>JSON</h2>
 Tasks for manipulating JSON files.  JSON files read as hash tables and arraylists, but of which can be accessed as if they're predicates: [table key ?value] accesses the value associated with key in table, and [list ?element] accesses elements in a list.

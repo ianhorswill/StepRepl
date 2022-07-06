@@ -920,6 +920,9 @@
         <member name="M:Step.Interpreter.ArgumentInstantiationException.#ctor(System.Object,Step.Interpreter.BindingEnvironment,System.Object[])">
             <inheritdoc />
         </member>
+        <member name="M:Step.Interpreter.ArgumentInstantiationException.#ctor(System.Object,Step.Interpreter.BindingEnvironment,System.Object[],System.String)">
+            <inheritdoc />
+        </member>
         <member name="M:Step.Interpreter.ArgumentInstantiationException.Check(System.Object,System.Object,System.Boolean,Step.Interpreter.BindingEnvironment,System.Object[])">
             <summary>
             Check argument and throw instantiation exception if necessary.

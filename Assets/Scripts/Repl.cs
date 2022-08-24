@@ -12,6 +12,7 @@ using Assets.SION;
 using JetBrains.Annotations;
 using Step.Interpreter;
 using Step.Utilities;
+using Step.Output;
 using TMPro;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -233,7 +234,7 @@ public class Repl
                     ArgumentCountException.Check("NoteCalledTasks", 1, args);
                     var callSummary =
                         ArgumentTypeException.Cast<Dictionary<CompoundTask, int>>("NoteCalledTasks", args[0], args);
-                    foreach (var frame in predecessor.GoalChain)
+                    foreach (var frame in MethodCallFrame.GoalChain(predecessor))
                     {
                         var task = frame.Method.Task;
                         callSummary.TryGetValue(task, out var previousCount);

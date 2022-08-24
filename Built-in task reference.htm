@@ -17,11 +17,7 @@ Predicates that test whether two values are the same or different.  Many of thes
 <h2>Constraint solving</h2>
 This is an experimental wrapper for the CatSAT SMT solver.  The API may change over time.
 <p>
-<code>[<b>DefinePredicate</b> <i>Name</i> <i>args</i> <i>...</i>]</code><br>Specifies the global variable Name should be a constraint predicate with the specified arguments.
-<p>
 <code>[<b>DefineProblem</b> <i>Name</i>]</code><br>Defines the global variable, Name, to be a new, empty, constraint problem.
-<p>
-<code>[<b>DefineSymmetricPredicate</b> <i>Name</i> <i>arg1</i> <i>arg2</i>]</code><br>Specifies the global variable Name should be a symmetric constraint predicate with the specified arguments.
 <p>
 <code>[<b>SATProblem</b> <i>?problem</i>]</code><br>Places a new, empty, SAT problem in ?problem.
 <p>
@@ -32,39 +28,41 @@ This is an experimental wrapper for the CatSAT SMT solver.  The API may change o
 <h3>Assertions</h3>
 Tasks for permanently adding an assertion (constraint) to a SAT problem.  These are imperatives that destructively modify the SAT problem, and so cannot be backtracked.
 <p>
-<code>[<b>All</b> <i>problem</i> <i>propositions</i> <i>...</i>]</code><br>Adds to the problem the constraint that all of the propositions must be true.
+<code>[<b>All</b> <i>propositions</i> <i>...</i>]</code><br>Adds to the problem the constraint that all of the propositions must be true.
 <p>
-<code>[<b>Assert</b> <i>problem</i> <i>conclusion</i> <i>&lt;-</i> <i>premise</i> <i>...</i>]</code><br>Adds an implication as a constraint to the problem
+<code>[<b>Assert</b> <i>conclusion</i> <i>&lt;-</i> <i>premise</i> <i>...</i>]</code><br>Adds an implication as a constraint to the current problem
 <p>
-<code>[<b>AtLeast</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at least count alternatives must be true.
+<code>[<b>AtLeast</b> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the current problem the constraint that at least count alternatives must be true.
 <p>
-<code>[<b>AtMost</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at most count alternatives must be true.
+<code>[<b>AtMost</b> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the current problem the constraint that at most count alternatives must be true.
 <p>
-<code>[<b>Exactly</b> <i>problem</i> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that exactly count alternatives must be true.
+<code>[<b>Exactly</b> <i>count</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the current problem the constraint that exactly count alternatives must be true.
 <p>
-<code>[<b>Exists</b> <i>problem</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that at least one of the alternatives must be true.
+<code>[<b>Exists</b> <i>alternatives</i> <i>...</i>]</code><br>Adds to the current problem the constraint that at least one of the alternatives must be true.
 <p>
 <code>[<b>Quantify</b> <i>problem</i> <i>min</i> <i>max</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that between min and max of the alternatives must be true.
 <p>
-<code>[<b>Unique</b> <i>problem</i> <i>alternatives</i> <i>...</i>]</code><br>Adds to the problem the constraint that one and only one of the alternatives must be true.
+<code>[<b>Unique</b> <i>alternatives</i> <i>...</i>]</code><br>Adds to the current problem the constraint that one and only one of the alternatives must be true.
 <p>
 <h3>Assumptions</h3>
 Tasks for reversible add an assertion (constraint) to a SAT problem.  These are imperatives that destructively modify the SAT problem, and so cannot currently be backtracked.  However, all assumptions can be removed from a problem using ResetAssumptions.
 <p>
 <code>[<b>Assume</b> <i>problem</i> <i>literal</i>]</code><br>Adds to the problem the constraint that literal be true.  This can be retracted by calling ResetAssumptions.
 <p>
+<code>[<b>AssumeAll</b> <i>problem</i> <i>literal_list</i>]</code><br>Adds to the problem the constraint that all the literals in the list be true.  This can be retracted by calling ResetAssumptions.
+<p>
 <code>[<b>ResetAssumptions</b> <i>problem</i>]</code><br>Removes any assumptions from problem.
 <p>
 <h2>Control flow</h2>
 Tasks that run or otherwise control the execution of other tasks.
 <p>
-<code>[<b>And</b> <i>task</i> <i>...</i>]</code><br>Runs each of the tasks, in order.
-<p>
 <code>[<b>And</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order.
 <p>
-<code>[<b>And</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order until one works.
+<code>[<b>AndImplementation</b> <i>task</i> <i>...</i>]</code><br>Runs each of the tasks, in order.
 <p>
 <code>[<b>CountAttempts</b> <i>?count</i>]</code><br>Binds ?count to 0, then to increasing numbers each time the system backtracks to the call.  Used in a loop to run something repeatedly: [CountAttempts ?count] [DoSomething] [= ?count 100] will run DoSomething until ?count is 100.
+<p>
+<code>[<b>Or</b> <i>calls</i> <i>...</i>]</code><br>Runs each of the calls, in order until one works.
 <p>
 <code>[<b>Throw</b> <i>message</i> <i>...</i>]</code><br>Throws an exception (error) containing the specified message.
 <p>
@@ -100,14 +98,18 @@ Tasks that collect together all the solutions to a given call.
 <p>
 <code>[<b>FindAll</b> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Runs call, backtracking to find every possible solution to it.  For each solution, FindAll records the value of ?result, and returns a list of all ?results in order, in ?all_results.  If backtracking produces duplicate ?results, there will be multiple copies of them in ?all_results; to eliminate duplicate solutions, use FindUnique.  If call never fails, this will run forever.
 <p>
-<code>[<b>FindUnique</b> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Runs call, backtracking to find every possible solution to it.  For each solution, FindAll records the value of ?result, and returns a list of all ?results in order, in ?all_results, eliminating duplicate solutions.  If call never fails, this will run forever.
+<code>[<b>FindAtMostNUnique</b> <i>n</i> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Like FindUnique, but takes only the first n unique solutions that are generated.
+<p>
+<code>[<b>FindFirstNUnique</b> <i>n</i> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Like FindUnique, but takes only the first n unique solutions that are generated.  Fails if there are fewer than n unique solutions.
+<p>
+<code>[<b>FindUnique</b> <i>?result</i> <i>call</i> <i>?all_results</i>]</code><br>Runs call, backtracking to find every possible solution to it.  For each solution, FindUnique records the value of ?result, and returns a list of all ?results in order, in ?all_results, eliminating duplicate solutions.  If call never fails, this will run forever.
 <p>
 <code>[<b>Max</b> <i>?scoreVariable</i> <i>code</i> <i>...</i>]</code><br>Runs code, backtracking to find all solutions, keeping the state (text output and variable bindings) of the solution with the largest value of ?scoreVariable
 <p>
 <code>[<b>Min</b> <i>?scoreVariable</i> <i>code</i> <i>...</i>]</code><br>Runs code, backtracking to find all solutions, keeping the state (text output and variable bindings) of the solution with the smallest value of ?scoreVariable
 <p>
 <h2>Data structures</h2>
-Predicates that create or access complex data objects.  Note that dictionaries and lists can also be used as predicates.  So [dictionary ?key ?value] is true when ?key has ?value in the dictinoary and and [list ?element] is true when ?element is an element of the list.
+Predicates that create or access complex data objects.  Note that dictionaries and lists can also be used as predicates.  So [dictionary ?key ?value] is true when ?key has ?value in the dictionary and and [list ?element] is true when ?element is an element of the list.
 <p>
 <code>[<b>Hashtable</b> <i>?h</i>]</code><br>Creates a new empty hash table and stores it in ?h
 <p>
@@ -151,6 +153,10 @@ Tasks for manipulating JSON files.  JSON files read as hash tables and arraylist
 Predicates that test the binding state of a variable.
 <p>
 <code>[<b>CopyTerm</b> <i>in</i> <i>out</i>]</code><br>Sets out to a copy of in with fresh variables, so that unifications to one don't affect the other
+<p>
+<code>[<b>Ground</b> <i>x</i>]</code><br>Succeeds when its argument is contains no uninstantiated variables (variables without values)
+<p>
+<code>[<b>Nonground</b> <i>x</i>]</code><br>Succeeds when its argument is contains uninstantiated variables (variables without values)
 <p>
 <code>[<b>NonVar</b> <i>x</i>]</code><br>Succeeds when its argument is a *not* an uninstantiated variable.
 <p>

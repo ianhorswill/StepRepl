@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Step;
 using Step.Interpreter;
+using Step.Output;
 using Step.Utilities;
 
 namespace Assets.SION

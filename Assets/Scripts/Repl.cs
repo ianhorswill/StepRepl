@@ -390,7 +390,9 @@ public class Repl
         Autograder.AddBuiltins();
         SIONPrimitives.AddBuiltins(ReplUtilities);
         CatSATInterface.AddBuiltins(ReplUtilities);
+        #if NewtonSoft
         Json.AddBuiltins(ReplUtilities);
+#endif
         SExpressionReader.AddBuiltins(ReplUtilities);
     }
 

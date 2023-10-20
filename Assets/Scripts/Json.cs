@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+#if NewtonSoft
 using Newtonsoft.Json;
+#endif
 using Step;
 using Step.Interpreter;
 using Step.Utilities;
 
 namespace Assets.Scripts
 {
+#if NewtonSoft
     public static class Json
     {
         public static void AddBuiltins(Module m)
@@ -102,4 +105,5 @@ namespace Assets.Scripts
             return o;
         }
     }
+#endif
 }

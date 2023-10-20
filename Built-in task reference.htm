@@ -144,11 +144,6 @@ Predicates that run other predicates.
 <p>
 <code>[<b>NotAny</b> <i>call</i>]</code><br>Runs call.  If the call succeeds, it Not, fails, undoing any effects of the call.  If the call fails, then Not succeeds.
 <p>
-<h2>JSON</h2>
-Tasks for manipulating JSON files.  JSON files read as hash tables and arraylists, but of which can be accessed as if they're predicates: [table key ?value] accesses the value associated with key in table, and [list ?element] accesses elements in a list.
-<p>
-<code>[<b>ReadJson</b> <i>filename</i> <i>?json</i>]</code><br>Reads filename.json and places the decoded data in ?json.
-<p>
 <h2>Metalogical</h2>
 Predicates that test the binding state of a variable.
 <p>
@@ -164,6 +159,8 @@ Predicates that test the binding state of a variable.
 <p>
 <h2>Miscellaneous</h2>
 <code>[<b>Cons</b> <i>firstElement</i> <i>restElements</i> <i>tuple</i>]</code><br>True when tuple starts with firstElement and continues with restElements.
+<p>
+<code>[<b>TreeSearch</b> <i>startNode</i> <i>finalNode</i> <i>utility</i> <i>NextNode</i> <i>GoalNode</i> <i>NodeUtility</i>]</code><br>Performs a best-first search of a tree starting at startNode, using NextNode to enumerate neighbors of a given node, GoalNode to test whether a node is a goal node, and NodeUtility to compute a utility to use for the best-first search.
 <p>
 <h2>Output</h2>
 Tasks that print things.
@@ -228,7 +225,7 @@ Tasks for manipulating s-expression files.
 <code>[<b>ReadPddl</b> <i>filename</i> <i>?object</i>]</code><br>Reads filename.pddl and places the decoded data in ?object.
 <p>
 <h2>StepRepl</h2>
-Tasks that control the behavior of StepRepl or whatever other game engine the Step code is running inside of.
+These tasks are defined by the StepRepl IDE.  To use them within a game not running inside StepRepl, you would need to copy their source into your game.
 <p>
 <code>[<b>EnvironmentOption</b> <i>argument</i> <i>...</i>]</code><br>Asks StepRepl or whatever other program this Step code is running in to change its handling of step code.
 <p>

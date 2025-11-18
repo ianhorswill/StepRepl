@@ -876,9 +876,12 @@ public class Repl
                         if (DebugOutput.pageToDisplay > 0)
                             DebugOutput.pageToDisplay--;
                         break;
-                    
+
                     case KeyCode.Print:
-                        GUIUtility.systemCopyBuffer = OutputText.text;
+                    case KeyCode.F8:
+                    case KeyCode.P:
+                        if (keyCode != KeyCode.P || e.control)
+                            GUIUtility.systemCopyBuffer = OutputText.text;
                         break;
 
                     default:
@@ -886,7 +889,8 @@ public class Repl
                         {
                             DebugText = "";
                             RunStepCode($"[RunHotKey {keyCode.ToString().ToLowerInvariant()}]");
-                        } else if (e.control && keyCode == KeyCode.C)
+                        }
+                        else if (e.control && keyCode == KeyCode.C)
                         {
                             GUIUtility.systemCopyBuffer = OutputText.text;
                         }

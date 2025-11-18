@@ -83,11 +83,33 @@ public static class Autograder
         var call = ArgumentTypeException.Cast<object[]>(nameof(CallInModule), args[0], args);
         var module = ArgumentTypeException.Cast<Module>(nameof(CallInModule), args[1], args);
 
-        var task = call[0] as CompoundTask;
-        if (task == null)
-            throw new InvalidOperationException(
-                "Task argument to Call must be a compound task, i.e. a user-defined task with methods.");
+        Task task;
+        switch (call[0])
+        {
+            case Task t:
+                task = t;
+                break;
 
+            case string s:
+                task = module[s] as Task;
+                if (task == null)
+                    throw new InvalidOperationException(
+                        $"Task argument to CallInModule must be a task or name of a task.  It was instead the name {s}, whose value in module {module} is {module[s]}.");
+                break;
+
+            case string[] text:
+                task = module[text[0]] as Task;
+                if (task == null)
+                    throw new InvalidOperationException(
+                        $"Task argument to CallInModule must be a task or name of a task.  It was instead the name {text[0]}, whose value in module {module} is {module[text[0]]}.");
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Task argument to CallInModule must be a task or name of a task.  It was instead {call[0]}.");
+        }
+
+        
         var taskArgs = new object[call.Length - 1 + args.Length - 2];
 
         var i = 0;
@@ -111,10 +133,10 @@ public static class Autograder
             call = call[1] as object[];
 
         // ReSharper disable once PossibleNullReferenceException
-        var task = call[0] as CompoundTask;
+        var task = call[0] as Task;
         if (task == null)
             throw new InvalidOperationException(
-                "Task argument to Call must be a compound task, i.e. a user-defined task with methods.");
+                $"Task argument to CallResult must be a task.  It was instead {call[0]}.");
 
         var taskArgs = new object[call.Length - 1];
 
